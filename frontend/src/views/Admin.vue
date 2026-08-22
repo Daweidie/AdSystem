@@ -6,6 +6,7 @@ import QRCode from 'qrcode';
 
 const API = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api').replace(/\/$/, '');
 const VOD_SDK = 'https://cdn-go.cn/cdn/vod-js-sdk-v6/latest/vod-js-sdk-v6.js';
+const MAX_VIDEO_UPLOAD_SIZE_BYTES = 800 * 1024 * 1024;
 // 暂时隐藏有问题的纯文字卡片实验入口，保留后端和历史链接兼容能力。
 const TEXT_DESCRIPTION_EXPERIMENT_ENABLED = false;
 const router = useRouter();
@@ -935,6 +936,11 @@ function pickFile(event, type) {
   const file = event.target.files?.[0] || null;
   event.target.value = '';
   if (type === 'video') {
+    if (file && file.size > MAX_VIDEO_UPLOAD_SIZE_BYTES) {
+      uploadForm.videoFile = null;
+      ElMessage.error('视频文件不能超过 800MB，请压缩或重新选择');
+      return;
+    }
     uploadForm.videoFile = file;
     if (file && !uploadForm.title) uploadForm.title = file.name.replace(/\.[^.]+$/, '');
     return;
@@ -955,6 +961,11 @@ async function submitUpload() {
   if (!uploadForm.videoFile || !uploadForm.title || !uploadForm.businessGroupId || !uploadForm.materialGroupId) {
     ElMessage.warning('请完整选择业务组、素材组，填写名称并选择视频'); return;
   }
+  if (uploadForm.videoFile.size > MAX_VIDEO_UPLOAD_SIZE_BYTES) {
+    uploadForm.videoFile = null;
+    ElMessage.error('视频文件不能超过 800MB，请压缩或重新选择');
+    return;
+  }
   uploading.value = true; uploadProgress.value = 0;
   try {
     const TcVodModule = await loadVodSdk();
@@ -963,7 +974,10 @@ async function submitUpload() {
     const appId = Number(import.meta.env.VITE_TENCENT_APP_ID);
     const tcVod = new TcVod({
       appId,
-      getSignature: async () => (await request('/video/upload', { method: 'POST' })).signature,
+      getSignature: async () => (await request('/video/upload', {
+        method: 'POST',
+        body: JSON.stringify({ fileSize: uploadForm.videoFile.size }),
+      })).signature,
     });
     // Tencent VOD remains responsible for the video upload. Custom covers are
     // persisted by our backend after the material has an id, so they never

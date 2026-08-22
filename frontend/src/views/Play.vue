@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const TCPLAYER_SCRIPT =
@@ -18,6 +18,12 @@ const errorMessage = ref('');
 const videoTitle = ref('视频播放');
 const videoInfo = ref(null);
 const playerElementKey = ref(0);
+const playerShell = ref(null);
+const isPlaying = ref(false);
+const isMuted = ref(false);
+const isFullscreen = ref(false);
+const currentTime = ref(0);
+const duration = ref(0);
 
 let player = null;
 let loadSequence = 0;
@@ -26,6 +32,10 @@ let sessionId = '';
 let startReported = false;
 let lastProgressReportedAt = 0;
 let lastPlayedSeconds = 0;
+let furthestPlayedSeconds = 0;
+let restoringSeek = false;
+
+const SEEK_TOLERANCE_SECONDS = 1.5;
 
 function getApiBaseUrl() {
   const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim();
@@ -139,6 +149,124 @@ function getCurrentTime(instance = player) {
   }
 }
 
+function getNativeVideoElement() {
+  return document.getElementById(PLAYER_ELEMENT_ID);
+}
+
+function getDuration(instance = player) {
+  try {
+    const value = typeof instance?.duration === 'function'
+      ? instance.duration()
+      : getNativeVideoElement()?.duration;
+    return Number.isFinite(Number(value)) ? Number(value) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setCurrentTime(value, instance = player) {
+  try {
+    if (typeof instance?.currentTime === 'function') {
+      instance.currentTime(value);
+      return;
+    }
+    const video = getNativeVideoElement();
+    if (video) video.currentTime = value;
+  } catch {
+    // 某些移动端在媒体元数据可用前禁止设置 currentTime，后续事件会再次校正。
+  }
+}
+
+function enforceNormalPlaybackRate(instance = player) {
+  try {
+    if (typeof instance?.playbackRate === 'function' && Number(instance.playbackRate()) !== 1) {
+      instance.playbackRate(1);
+    }
+  } catch {
+    // 同时校正原生 video，兼容不公开 playbackRate 方法的播放器版本。
+  }
+  const video = getNativeVideoElement();
+  if (video && video.playbackRate !== 1) video.playbackRate = 1;
+}
+
+function restoreForwardSeek(instance = player) {
+  if (restoringSeek) return;
+  const requestedTime = getCurrentTime(instance);
+  if (requestedTime <= furthestPlayedSeconds + SEEK_TOLERANCE_SECONDS) return;
+
+  restoringSeek = true;
+  setCurrentTime(furthestPlayedSeconds, instance);
+  currentTime.value = furthestPlayedSeconds;
+  queueMicrotask(() => { restoringSeek = false; });
+}
+
+function handlePlayerTimeUpdate() {
+  const playedSeconds = getCurrentTime();
+  furthestPlayedSeconds = Math.max(furthestPlayedSeconds, playedSeconds);
+  currentTime.value = playedSeconds;
+  duration.value = getDuration();
+  handlePlaybackProgress();
+}
+
+function formatPlayerTime(value) {
+  const totalSeconds = Math.max(0, Math.floor(Number(value) || 0));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return hours
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+async function togglePlayback() {
+  if (!player) return;
+  try {
+    if (isPlaying.value) {
+      player.pause?.();
+    } else {
+      await player.play?.();
+    }
+  } catch {
+    // 自动播放策略拒绝时，用户可以再次点击播放。
+  }
+}
+
+function toggleMute() {
+  const nextMuted = !isMuted.value;
+  try {
+    if (typeof player?.muted === 'function') player.muted(nextMuted);
+    else if (typeof player?.mute === 'function') player.mute(nextMuted);
+  } catch {
+    // 继续同步原生 video。
+  }
+  const video = getNativeVideoElement();
+  if (video) video.muted = nextMuted;
+  isMuted.value = nextMuted;
+}
+
+async function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      await exit?.call(document);
+      return;
+    }
+    const shell = playerShell.value;
+    const request = shell?.requestFullscreen || shell?.webkitRequestFullscreen;
+    if (request) {
+      await request.call(shell);
+      return;
+    }
+    if (typeof player?.requestFullscreen === 'function') player.requestFullscreen();
+  } catch {
+    // 不支持全屏的内嵌浏览器保持当前播放状态。
+  }
+}
+
+function updateFullscreenState() {
+  isFullscreen.value = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
 async function reportPlaybackEvent(eventType, playedSeconds = getCurrentTime()) {
   const videoId = videoInfo.value?.id;
 
@@ -189,6 +317,8 @@ async function reportPlaybackEvent(eventType, playedSeconds = getCurrentTime()) 
 }
 
 function handlePlaybackStarted() {
+  isPlaying.value = true;
+  enforceNormalPlaybackRate();
   if (startReported) {
     return;
   }
@@ -386,6 +516,12 @@ async function initializePlayer() {
   startReported = false;
   lastProgressReportedAt = 0;
   lastPlayedSeconds = 0;
+  furthestPlayedSeconds = 0;
+  restoringSeek = false;
+  isPlaying.value = false;
+  isMuted.value = false;
+  currentTime.value = 0;
+  duration.value = 0;
   disposePlayer();
   playerElementKey.value += 1;
 
@@ -455,7 +591,13 @@ async function initializePlayer() {
       appID: String(playback.appId),
       psign: playback.psign,
       autoplay: true,
-      controls: true,
+      controls: false,
+      bigPlayButton: false,
+      playbackRates: [1],
+      controlBar: {
+        progressControl: false,
+        playbackRateMenuButton: false,
+      },
     };
 
     if (playback.licenseUrl) {
@@ -475,8 +617,14 @@ async function initializePlayer() {
     player = playerInstance;
     playerInstance.on?.('play', handlePlaybackStarted);
     playerInstance.on?.('playing', handlePlaybackStarted);
-    playerInstance.on?.('timeupdate', handlePlaybackProgress);
+    playerInstance.on?.('pause', () => { isPlaying.value = false; });
+    playerInstance.on?.('loadedmetadata', () => { duration.value = getDuration(playerInstance); });
+    playerInstance.on?.('durationchange', () => { duration.value = getDuration(playerInstance); });
+    playerInstance.on?.('timeupdate', handlePlayerTimeUpdate);
+    playerInstance.on?.('seeking', () => { restoreForwardSeek(playerInstance); });
+    playerInstance.on?.('ratechange', () => { enforceNormalPlaybackRate(playerInstance); });
     playerInstance.on?.('ended', () => {
+      isPlaying.value = false;
       void reportPlaybackEvent('complete', getCurrentTime(playerInstance));
     });
     playerInstance.on?.('error', (event) => {
@@ -507,6 +655,11 @@ watch(
   { immediate: true },
 );
 
+onMounted(() => {
+  document.addEventListener('fullscreenchange', updateFullscreenState);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenState);
+});
+
 onBeforeUnmount(() => {
   loadSequence += 1;
   delete document.documentElement.dataset.demo18PlayerInitialized;
@@ -514,6 +667,8 @@ onBeforeUnmount(() => {
     void reportPlaybackEvent('progress');
   }
   disposePlayer();
+  document.removeEventListener('fullscreenchange', updateFullscreenState);
+  document.removeEventListener('webkitfullscreenchange', updateFullscreenState);
 });
 </script>
 
@@ -523,7 +678,7 @@ onBeforeUnmount(() => {
       <h1>{{ videoTitle }}</h1>
     </header>
 
-    <section class="player-shell" aria-live="polite">
+    <section ref="playerShell" class="player-shell" aria-live="polite">
       <div v-if="pageState === 'loading'" class="status-panel">
         <span class="spinner" aria-hidden="true"></span>
         <p>正在加载视频，请稍候…</p>
@@ -551,6 +706,22 @@ onBeforeUnmount(() => {
         x5-playsinline
         x5-video-player-type="h5-page"
       ></video>
+
+      <div v-if="pageState === 'ready'" class="safe-controls" aria-label="视频播放控制">
+        <button type="button" :aria-label="isPlaying ? '暂停' : '播放'" @click="togglePlayback">
+          <svg v-if="!isPlaying" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12 7 4.8Z" /></svg>
+          <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 5h4v14h-4V5Zm7 0h4v14h-4V5Z" /></svg>
+        </button>
+        <button type="button" :aria-label="isMuted ? '取消静音' : '静音'" @click="toggleMute">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm11.5-.8v7.6a4.5 4.5 0 0 0 0-7.6Zm0-3.2v2.1a6.5 6.5 0 0 1 0 9.8V19a8.5 8.5 0 0 0 0-14Z" /></svg>
+          <span v-if="isMuted" class="mute-slash" aria-hidden="true"></span>
+        </button>
+        <span class="safe-controls-time">{{ formatPlayerTime(currentTime) }} / {{ formatPlayerTime(duration) }}</span>
+        <span class="playback-lock-note">顺序播放</span>
+        <button type="button" :aria-label="isFullscreen ? '退出全屏' : '全屏播放'" @click="toggleFullscreen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h5v2H7v3H5V5Zm9 0h5v5h-2V7h-3V5ZM5 14h2v3h3v2H5v-5Zm12 0h2v5h-5v-2h3v-3Z" /></svg>
+        </button>
+      </div>
     </section>
   </main>
 </template>
@@ -594,6 +765,78 @@ onBeforeUnmount(() => {
 .player-shell :deep(.tcplayer) {
   width: 100% !important;
   height: 100% !important;
+}
+
+.safe-controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 5px 8px max(5px, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgb(0 0 0 / 82%));
+}
+
+.safe-controls button {
+  position: relative;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.safe-controls button:active {
+  background: rgb(255 255 255 / 16%);
+}
+
+.safe-controls svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.safe-controls button:last-child {
+  margin-left: auto;
+}
+
+.safe-controls-time {
+  margin-left: 3px;
+  color: #fff;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.playback-lock-note {
+  margin-left: 8px;
+  padding: 2px 7px;
+  color: rgb(255 255 255 / 76%);
+  font-size: 11px;
+  line-height: 18px;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.mute-slash {
+  position: absolute;
+  top: 9px;
+  left: 19px;
+  width: 2px;
+  height: 23px;
+  background: #fff;
+  transform: rotate(-45deg);
+  transform-origin: center;
 }
 
 .status-panel {

@@ -26,6 +26,28 @@ test('video retention defaults to three days and accepts a positive override', (
   }
 });
 
+test('upload signatures are only issued for videos at or below 800MB', async () => {
+  assert.equal(videoController.MAX_VIDEO_UPLOAD_SIZE_BYTES, 800 * 1024 * 1024);
+
+  let oversizeError;
+  await videoController.getUploadSignature(
+    { body: { fileSize: videoController.MAX_VIDEO_UPLOAD_SIZE_BYTES + 1 } },
+    { json() { throw new Error('oversize upload must not receive a signature'); } },
+    (error) => { oversizeError = error; },
+  );
+  assert.equal(oversizeError?.status, 413);
+  assert.equal(oversizeError?.code, 'VIDEO_FILE_TOO_LARGE');
+
+  let missingSizeError;
+  await videoController.getUploadSignature(
+    { body: {} },
+    { json() { throw new Error('missing file size must not receive a signature'); } },
+    (error) => { missingSizeError = error; },
+  );
+  assert.equal(missingSizeError?.status, 400);
+  assert.equal(missingSizeError?.code, 'VIDEO_FILE_SIZE_INVALID');
+});
+
 test('promoter short-link scope is limited to links created by that promoter', () => {
   const own = shortLinkController.getShortLinkScope(
     { role: 'general_user', id: 42, business_group_id: 7 },

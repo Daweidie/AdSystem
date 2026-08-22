@@ -258,7 +258,13 @@ async function login(page, phone) {
       assert.equal(await directLinkPage.getByText(/继续播放|继续打开/).count(), 0);
       const playerOptions = await directLinkPage.evaluate(() => window.__demo18TestPlayer?.options);
       assert.equal(playerOptions.autoplay, true);
-      assert.equal(playerOptions.controls, true);
+      assert.equal(playerOptions.controls, false);
+      assert.deepEqual(playerOptions.playbackRates, [1]);
+      assert.equal(playerOptions.controlBar.progressControl, false);
+      assert.equal(playerOptions.controlBar.playbackRateMenuButton, false);
+      assert.equal(await directLinkPage.getByRole('button', { name: '静音' }).count(), 1);
+      assert.equal(await directLinkPage.getByRole('button', { name: '全屏播放' }).count(), 1);
+      assert.equal(await directLinkPage.getByText('顺序播放', { exact: true }).count(), 1);
       await directLinkPage.waitForFunction(
         () => performance.getEntriesByType('resource').some((entry) => /\/events$/.test(new URL(entry.name).pathname)),
         null,

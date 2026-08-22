@@ -20,6 +20,7 @@ const {
 } = require('../services/cardCoverService');
 
 const DEFAULT_RETENTION_DAYS = 3;
+const MAX_VIDEO_UPLOAD_SIZE_BYTES = 800 * 1024 * 1024;
 
 function getRetentionDays() {
   const parsed = Number.parseInt(process.env.VIDEO_RETENTION_DAYS || '', 10);
@@ -230,6 +231,14 @@ async function buildPlayPageUrl(req, fileId, providedUrl) {
 
 async function getUploadSignature(req, res, next) {
   try {
+    const fileSize = Number(req.body?.fileSize);
+    if (!Number.isSafeInteger(fileSize) || fileSize <= 0) {
+      throw createHttpError(400, '视频文件大小无效，请重新选择文件', 'VIDEO_FILE_SIZE_INVALID');
+    }
+    if (fileSize > MAX_VIDEO_UPLOAD_SIZE_BYTES) {
+      throw createHttpError(413, '视频文件不能超过 800MB', 'VIDEO_FILE_TOO_LARGE');
+    }
+
     const signature = await vodService.getUploadSignature();
     const configuredTtl = Number.parseInt(
       process.env.TENCENT_UPLOAD_SIGNATURE_TTL_SECONDS || '3600',
@@ -957,6 +966,7 @@ async function deleteVideo(req, res, next) {
 
 module.exports = {
   DEFAULT_RETENTION_DAYS,
+  MAX_VIDEO_UPLOAD_SIZE_BYTES,
   getRetentionDays,
   getUploadSignature,
   completeUpload,
