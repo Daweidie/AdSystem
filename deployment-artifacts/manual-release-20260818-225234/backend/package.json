@@ -1,0 +1,24 @@
+{
+  "name": "video-ad-resource-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "视频广告资源管理系统后端框架",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "build": "node scripts/check-build.js",
+    "migrate": "node scripts/migrate.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "multer": "^2.2.0",
+    "mysql2": "^3.11.5",
+    "sharp": "^0.33.5"
+  }
+}

@@ -1,0 +1,215 @@
+{
+  "generatedAt": "2026-08-11T15:42:11.639Z",
+  "runId": "1786462913758-b60fb4",
+  "pass": 13,
+  "blocked": 1,
+  "fail": 0,
+  "results": [
+    {
+      "number": 1,
+      "name": "视频上传",
+      "status": "PASS",
+      "evidence": {
+        "uploadSignatureHttp": 200,
+        "completeHttp": 201,
+        "videoId": 6,
+        "fileId": "5001834815503868735",
+        "title": "AT_修复验收_1786462913758-b60fb4",
+        "status": "ready",
+        "lifetimeSeconds": 864000
+      }
+    },
+    {
+      "number": 2,
+      "name": "视频列表",
+      "status": "PASS",
+      "evidence": {
+        "headers": [
+          "标题",
+          "FileId",
+          "短链",
+          "状态",
+          "播放量",
+          "创建时间",
+          "过期时间",
+          "操作"
+        ],
+        "actions": [
+          "复制",
+          "播放",
+          "生成短链",
+          "删除"
+        ]
+      }
+    },
+    {
+      "number": 3,
+      "name": "视频播放",
+      "status": "PASS",
+      "evidence": {
+        "navigationHttp": 200,
+        "readyState": 4,
+        "width": 640,
+        "height": 360,
+        "duration": 60.095011,
+        "currentTime": 0,
+        "muted": false,
+        "volume": 1,
+        "currentTimeAfter": 4.546325,
+        "startLogs": 1,
+        "sessions": 1,
+        "tcPlayerVersion": "4.5.4"
+      }
+    },
+    {
+      "number": 4,
+      "name": "视频过期",
+      "status": "PASS",
+      "evidence": {
+        "documentHttp": 410,
+        "apiHttp": 410,
+        "code": "VIDEO_EXPIRED",
+        "bodyText": "视频不可用 视频已过期，无法播放",
+        "shortLinkMismatch": 0
+      }
+    },
+    {
+      "number": 5,
+      "name": "缩链 API 生成",
+      "status": "BLOCKED_EXTERNAL_CONFIG",
+      "evidence": {
+        "code": "SUOLINK_DOMAIN_REQUIRED",
+        "message": "账号未提供已绑定且生效的缩链独享域名；占位值未被当作有效配置"
+      }
+    },
+    {
+      "number": 6,
+      "name": "自建短链生成",
+      "status": "PASS",
+      "evidence": {
+        "http": 201,
+        "shortCode": "Zsedqza",
+        "length": 7,
+        "platform": "self"
+      }
+    },
+    {
+      "number": 7,
+      "name": "短链跳转统计",
+      "status": "PASS",
+      "evidence": {
+        "http": 302,
+        "locationHasFileId": true,
+        "clicksBefore": 0,
+        "clicksAfter": 1,
+        "deviceType": "mobile"
+      }
+    },
+    {
+      "number": 8,
+      "name": "双轨制降级",
+      "status": "PASS",
+      "evidence": {
+        "http": 201,
+        "platform": "self",
+        "fallbackFrom": "suolink",
+        "structuredLogEvent": "short_link_provider_fallback"
+      }
+    },
+    {
+      "number": 9,
+      "name": "域名切换联动",
+      "status": "PASS",
+      "evidence": {
+        "switchHttp": 200,
+        "oldUrlUnchanged": true,
+        "oldDomainUnchanged": true,
+        "newDomainId": "8"
+      }
+    },
+    {
+      "number": 10,
+      "name": "短链状态管理",
+      "status": "PASS",
+      "evidence": {
+        "disabledHttp": 410,
+        "enabledHttp": 302
+      }
+    },
+    {
+      "number": 11,
+      "name": "视频删除",
+      "status": "PASS",
+      "evidence": {
+        "http": 200,
+        "cloudDelete": "confirmed_by_DeleteMedia_success_response",
+        "databaseStatus": "deleted",
+        "deletedAtPresent": true,
+        "deleteError": null,
+        "activeRelatedLinks": 0,
+        "retainedAuditLogs": 4,
+        "accessHttp": 410,
+        "excludedFromDefaultList": true
+      }
+    },
+    {
+      "number": 12,
+      "name": "短链列表管理",
+      "status": "PASS",
+      "evidence": {
+        "copyMessage": "短链接已复制",
+        "statsHttp": 200,
+        "dialog": "短链访问统计 累计点击量 2 移动端 1 次 · PC 1 次 http://localhost:3001/api/short/Zsedqza"
+      }
+    },
+    {
+      "number": 13,
+      "name": "域名管理",
+      "status": "PASS",
+      "evidence": {
+        "createHttp": 201,
+        "edit": true,
+        "disabled": true,
+        "enabled": true,
+        "switched": true,
+        "deleted": true
+      }
+    },
+    {
+      "number": 14,
+      "name": "数据库完整性",
+      "status": "PASS",
+      "evidence": {
+        "foreignKeys": [
+          {
+            "TABLE_NAME": "play_logs",
+            "COLUMN_NAME": "short_link_id",
+            "REFERENCED_TABLE_NAME": "short_links"
+          },
+          {
+            "TABLE_NAME": "play_logs",
+            "COLUMN_NAME": "video_id",
+            "REFERENCED_TABLE_NAME": "videos"
+          },
+          {
+            "TABLE_NAME": "short_links",
+            "COLUMN_NAME": "domain_id",
+            "REFERENCED_TABLE_NAME": "domains"
+          },
+          {
+            "TABLE_NAME": "short_links",
+            "COLUMN_NAME": "video_id",
+            "REFERENCED_TABLE_NAME": "videos"
+          }
+        ],
+        "orphanCounts": {
+          "shortlink_video": 0,
+          "shortlink_domain": 0,
+          "playlog_video": 0,
+          "playlog_shortlink": 0,
+          "expiry_mismatch": 0
+        }
+      }
+    }
+  ]
+}

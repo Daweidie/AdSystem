@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 17 Aug 2026 03:31:38 GMT
+Content-Type: image/png
+Content-Length: 630341
+Last-Modified: Mon, 17 Aug 2026 03:18:29 GMT
+Connection: keep-alive
+ETag: "6a827d85-99e45"
+Accept-Ranges: bytes
+

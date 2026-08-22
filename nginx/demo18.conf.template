@@ -1,0 +1,92 @@
+server {
+    listen 80;
+    server_name __SERVER_NAME__;
+
+    root __APP_DIR__/frontend/dist;
+    index index.html;
+    client_max_body_size 20m;
+
+    # Enterprise WeChat fetches custom card covers as ordinary top-level static
+    # assets. Keep this outside /api so no proxy, CORS or auth behavior applies.
+    location ^~ /card-covers/ {
+        alias __APP_DIR__/backend/uploads/share-cards/;
+        limit_except GET HEAD { deny all; }
+        etag off;
+        add_header Cache-Control "public, max-age=86400" always;
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    # 播放页必须先由后端验证视频状态。有效视频由后端返回构建后的
+    # index.html；不存在/过期/已删除分别保持顶层 404/410 文档状态。
+    location = /play {
+        proxy_pass http://127.0.0.1:__BACKEND_PORT__/play;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 60s;
+        proxy_intercept_errors off;
+    }
+
+    # 微信爬虫必须直接拿到后端生成的完整卡片 HTML，不能落到 Vue SPA。
+    location ~ "^/card/[A-Za-z0-9_-]{20,128}$" {
+        proxy_pass http://127.0.0.1:__BACKEND_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 60s;
+        proxy_intercept_errors off;
+    }
+
+    # 新自建短码直接返回 Express 生成的 HTTP 200 卡片 HTML，禁止被 SPA 接管。
+    location ~ "^/s/[A-Za-z0-9]{6,8}$" {
+        proxy_pass http://127.0.0.1:__BACKEND_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 60s;
+        proxy_intercept_errors off;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:__BACKEND_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 60s;
+    }
+
+    location = /health {
+        proxy_pass http://127.0.0.1:__BACKEND_PORT__/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 自建 6-8 位短码直接交给后端解析；第三方缩链不经过此规则。
+    location ~ "^/([A-Za-z0-9]{6,8})$" {
+        rewrite "^/([A-Za-z0-9]{6,8})$" /api/short/$1 break;
+        proxy_pass http://127.0.0.1:__BACKEND_PORT__;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

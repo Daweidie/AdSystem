@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Mon, 17 Aug 2026 03:31:11 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 3235
+Connection: keep-alive
+Vary: Origin
+Cache-Control: public, max-age=0, must-revalidate
+Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src https:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+Referrer-Policy: no-referrer
+X-Content-Type-Options: nosniff
+ETag: W/"ca3-Ty9yglr488cPcpmLYsUSBQNqCGA"
+

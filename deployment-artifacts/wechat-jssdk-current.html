@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="cn">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>JS-SDK 使用说明 | 微信服务号文档</title>
+    <meta name="description" content="微信服务号文档文档">
+    <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="keywords" content="微信官方文档">
+  <link rel="shortcut icon" type="image/x-icon" href="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico">
+  <link rel="mask-icon" color="#4C4C4C" href="https://res.wx.qq.com/a/wx_fed/assets/res/MjliNWVm.svg">
+  <link rel="apple-touch-icon-precomposed" href="https://res.wx.qq.com/a/wx_fed/assets/res/OTE0YTAw.png">
+  <script>
+(function () {
+  'use strict';
+
+  const SCRIPT_URLs = [
+      'https://dldir1.qq.com/WechatWebDev/devPlatform/px.min.js',
+      'https://dev.weixin.qq.com/platform-console/proxy/assets/tel/px.min.js',
+  ];
+  const param = {
+      maskMode: 'no-mask', // 隐私策略, all-mask 或 no-mask, 详见：https://dev.weixin.qq.com/docs/analysis/sdk/docs.html
+      recordCanvas: false,  // 若要采集canvas, 设为true
+      projectId: 'wxef34f91ddab0c534-0HLdQNKAk-dzsFsA', // 项目 ID，需替换为体验分析项目 ID
+      iframe: false, // 是否采集 iframe 页面
+      console: true, // 是否采集 console 输出的错误日志
+      network: true, // 是否采集网络错误
+  };
+  function loadScript(url) {
+      return new Promise((resolve, reject) => {
+          const scriptEle = document.createElement('script');
+          scriptEle.type = 'text/javascript';
+          scriptEle.async = true;
+          scriptEle.src = url;
+          scriptEle.onload = () => {
+              resolve(url);
+          };
+          scriptEle.onerror = () => {
+              reject(new Error('Script load error'));
+          };
+          document.head.appendChild(scriptEle);
+      });
+  }
+  async function main() {
+      try {
+          sessionStorage.setItem('wxobs_start_timestamp', String(Date.now()));
+          const fastestUrl = await Promise.race(SCRIPT_URLs.map(url => loadScript(url)));
+          window.__startPX && window.__startPX(param);
+      }
+      catch (error) {
+          console.error('Error loading scripts:', error);
+      }
+  }
+  main();
+
+})();
+        </script>
+    
+    <link rel="preload" href="https://res.wx.qq.com/wxdoc/dist/assets/css/0.styles.d2e9c5ba.css" as="style"><link rel="preload" href="https://res.wx.qq.com/wxdoc/dist/assets/js/app.778927a9.js" as="script"><link rel="preload" href="https://res.wx.qq.com/wxdoc/dist/assets/js/3627.c4c9be26.js" as="script">
+    <link rel="stylesheet" href="https://res.wx.qq.com/wxdoc/dist/assets/css/0.styles.d2e9c5ba.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><div class="theme-container"><header class="navbar navbar_with-link"><div class="navbar__left"><a href="/doc/" class="home-link router-link-active"><div class="logo__wrp"><span class="logo__icon"></span></div></a> <span class="dot"></span> <div class="dropdown-wrapper"><a class="dropdown-title"><span class="title">服务号</span> <span class="arrow right"></span></a> <ul class="nav-dropdown" style="display:none;"><li class="dropdown-item"><!----> <a href="/miniprogram/dev/framework/" class="nav-link external">
+  小程序
+</a></li><li class="dropdown-item"><!----> <a href="/minigame/introduction/" class="nav-link external">
+  小游戏
+</a></li><li class="dropdown-item"><!----> <a href="/doc/subscription/guide/" class="nav-link external">
+  公众号
+</a></li><li class="dropdown-item selected"><!----> <a href="/doc/service/guide/" class="nav-link external">
+  服务号
+</a></li><li class="dropdown-item"><!----> <a href="/doc/oplatform/open/intro.html" class="nav-link external">
+  开放平台
+</a></li><li class="dropdown-item"><!----> <a href="https://work.weixin.qq.com/api/doc" class="nav-link external">
+  企业微信
+</a></li><li class="dropdown-item"><!----> <a href="https://pay.weixin.qq.com/doc/v3/merchant/4012062524" class="nav-link external">
+  微信支付
+</a></li><li class="dropdown-item"><!----> <a href="/doc/channels/" class="nav-link external">
+  视频号
+</a></li><li class="dropdown-item"><!----> <a href="/doc/store/shop/" class="nav-link external">
+  微信小店
+</a></li><li class="dropdown-item"><!----> <a href="/doc/aispeech/platform/INTRODUCTION.html" class="nav-link external">
+  智能对话
+</a></li><li class="dropdown-item"><!----> <a href="/doc/xwei/xiaowei-introduction/Introduction.html" class="nav-link external">
+  腾讯小微
+</a></li><li class="dropdown-item"><!----> <a href="/doc/edu/introduction.html" class="nav-link external">
+  教育平台
+</a></li></ul></div></div> <div class="navbar__center"><!----></div> <div class="navbar__right"><nav class="nav-links"><div class="nav-item community-item"><a href="https://developers.weixin.qq.com/community/minihome/mixflow/1277775808983138305" target="_blank" class="nav-link external">
+  社区
+</a></div><div class="nav-item community-item"><a href="https://developers.weixin.qq.com/community/business/CategorySearch?cid=114" target="_blank" class="nav-link external">
+  学堂
+</a></div></nav> <ul class="lang-tab"><li class="lang-tab__icon"><img src="https://res.wx.qq.com/t/components/icons/base/translate_regular.svg"></li></ul> <div class="search__wrp-flex"><div class="search__input"><div class="weui-desktop-search"><button class="weui-desktop-icon-btn weui-desktop-search__btn weui-desktop-icon-btn__width"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.4529 16.4014C14.2428 17.4001 12.6915 18 11 18C7.134 18 4 14.866 4 11C4 7.134 7.134 4 11 4C14.866 4 18 7.134 18 11C18 12.7425 17.3633 14.3363 16.3099 15.5614L20.4243 19.6757L19.5757 20.5243L15.4529 16.4014ZM16.8 11C16.8 14.2033 14.2033 16.8 11 16.8C7.79674 16.8 5.2 14.2033 5.2 11C5.2 7.79676 7.79674 5.20001 11 5.20001C14.2033 5.20001 16.8 7.79676 16.8 11Z" fill="black"></path></svg></button></div> <a href="javascript:;" class="search-back__btn">取消</a></div> <div class="reco-list__wrp" style="display:none;"><ul class="reco__list"></ul> <div class="show-more"><a href="/doc/search?source=more&amp;query=&amp;doc_type=service&amp;jumpbackUrl=%2Fdoc%2F" class="reco-item__link">查看更多 </a></div></div> <div class="reco-list__wrp" style="display:none;"><div class="show-more"><a href="/doc/search?source=more&amp;query=&amp;doc_type=service&amp;jumpbackUrl=%2Fdoc%2F" class="reco-item__link"></a></div></div></div></div></header> <div class="subnavbar"><ul class="subnavbar__list"><li class="subnavbar__item selected" style="display:;"><div class="dropdown-subnavbar-title"><a href="/doc/service/guide/" target="_self" class="router-link-active">
+          指南
+          </a> <!----></div> <!----></li><li class="subnavbar__item" style="display:;"><div class="dropdown-subnavbar-title"><a href="/doc/service/api/" target="_self">
+          服务端 API
+          </a> <!----></div> <!----></li></ul></div> <div class="mobile-links__wrp"><div class="mobile-links_mobile"><a href="javascript:;" class="mobile-links__btn">中文</a></div> <div class="mobile-links__panel"><div class="links-panel__bd"><!----></div> <div class="links-panel__ft"><ul class="lang-tab"><li class="lang-tab__icon"><img src="https://res.wx.qq.com/t/components/icons/base/translate_regular.svg"></li></ul></div></div> <div><div class="weui-mask" style="display:none;"></div> <div class="weui-actionsheet "><!----> <div class="weui-actionsheet__menu"><div class="weui-actionsheet__cell">中文</div><div class="weui-actionsheet__cell">EN</div></div> <div class="weui-actionsheet__action"><div class="weui-actionsheet__cell">取消</div></div></div></div></div> <a href="javascript:;" class="mobile-search-btn"></a> <div class="main-container" style="margin-top:144px;"><div class="main-contontaier__bd" style="min-height:0px;"><div class="sidebar__wrp"><div class="sidebar-cell_mobile"><li class="subnavbar__item selected"><a href="javascript:;" target="_self">指南</a></li></div> <aside class="sidebar" style="top:144px;"> <div class="TreeNavigation"><div class="NavigationLevel NavigationLevel--level-0"><ul><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-1"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/" class="NavigationItem__router-link">
+      开发指南
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/" class="NavigationItem__router-link">
+      概述
+    <!----></a> <!----> <!----></span></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/api/" class="NavigationItem__router-link">
+      服务端 API 调用
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/api/" class="NavigationItem__router-link">
+      接口调用概述
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/api/limit.html" class="NavigationItem__router-link">
+      接口调用额度说明
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/api/warn_guide.html" class="NavigationItem__router-link">
+      接口报警和排查指引
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/push/" class="NavigationItem__router-link">
+      消息与事件推送
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/push/" class="NavigationItem__router-link">
+      消息与事件推送介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/push/encryption.html" class="NavigationItem__router-link">
+      消息加解密说明
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/start.html" class="NavigationItem__router-link">
+      快速入门
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/dev/migration.html" class="NavigationItem__router-link">
+      服务号「开发接口管理」升级说明
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-1"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/Receiving_standard_messages.html" class="NavigationItem__router-link">
+      能力接入
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/Receiving_standard_messages.html" class="NavigationItem__router-link">
+      基础消息与订阅通知
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/Receiving_standard_messages.html" class="NavigationItem__router-link">
+      接收普通消息
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/Receiving_event_pushes.html" class="NavigationItem__router-link">
+      接收事件推送
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/Passive_user_reply_message.html" class="NavigationItem__router-link">
+      被动回复用户消息
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/Batch_Sends.html" class="NavigationItem__router-link">
+      群发消息
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/message/One-time_subscription_info.html" class="NavigationItem__router-link">
+      一次性订阅消息
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/menu/intro.html" class="NavigationItem__router-link">
+      自定义菜单
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/menu/intro.html" class="NavigationItem__router-link">
+      自定义菜单介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/menu/Custom_Menu_Push_Events.html" class="NavigationItem__router-link">
+      自定义菜单事件推送
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/subscription_messages/intro.html" class="NavigationItem__router-link">
+      订阅通知
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/subscription_messages/intro.html" class="NavigationItem__router-link">
+      订阅通知介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/subscription_messages/push.html" class="NavigationItem__router-link">
+      订阅通知的事件推送
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/subscription_messages/category.html" class="NavigationItem__router-link">
+      服务号开放的服务类目
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/template_message/Template_Message_Interface.html" class="NavigationItem__router-link">
+      模板消息
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/template_message/Template_Message_Interface.html" class="NavigationItem__router-link">
+      模板消息
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/template_message/Template_Message_Operation_Specifications.html" class="NavigationItem__router-link">
+      模板消息运营规范
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/asset.html" class="NavigationItem__router-link">
+      素材管理
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/draft.html" class="NavigationItem__router-link">
+      草稿管理和商品卡片
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/comments.html" class="NavigationItem__router-link">
+      留言管理
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/publish.html" class="NavigationItem__router-link">
+      发布能力
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/unionid.html" class="NavigationItem__router-link">
+      用户管理
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Accreditation.html" class="NavigationItem__router-link">
+      微信认证事件推送
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/mp_editor_jsapi.html" class="NavigationItem__router-link">
+      MP编辑器JS拓展
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/plugin_spec.html" class="NavigationItem__router-link">
+      微信公众平台编辑器插件开发规范
+    <!----></a> <!----> <!----></span></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/kf/intro.html" class="NavigationItem__router-link">
+      客服消息
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/kf/intro.html" class="NavigationItem__router-link">
+      客服消息介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/kf/forwarding.html" class="NavigationItem__router-link">
+      将消息转发到客服
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/analysis_data/analysis_data.html" class="NavigationItem__router-link">
+      数据统计
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/analysis_data/analysis_data.html" class="NavigationItem__router-link">
+      数据统计接口介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/analysis_data/ad/Ad_Analysis.html" class="NavigationItem__router-link">
+      广告数据分析接口说明
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Intelligent_Interface/Open_API.html" class="NavigationItem__router-link">
+      智能接口
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Intelligent_Interface/Open_API.html" class="NavigationItem__router-link">
+      智能开放接口
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Intelligent_Interface/nlp.html" class="NavigationItem__router-link">
+      语义理解
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Intelligent_Interface/ocr.html" class="NavigationItem__router-link">
+      OCR识别
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Intelligent_Interface/Img_Proc.html" class="NavigationItem__router-link">
+      图像处理
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Instruction.html" class="NavigationItem__router-link">
+      微信发票
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-3"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Instruction.html" class="NavigationItem__router-link">
+      微信电子发票
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Instruction.html" class="NavigationItem__router-link">
+      业务介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Choosing_Access_Mode.html" class="NavigationItem__router-link">
+      选择接入模式
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <!----> <!----> <a href="https://pay.weixin.qq.com/doc/v3/partner/4015792553" target="_blank" class="NavigationItem__external-link">腾讯数电发票模式</a></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Self_Built_Platform_Mode_Instruction.html" class="NavigationItem__router-link">
+      商户自建平台模式
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Vendor_and_Invoicing_Platform_Mode_Instruction.html" class="NavigationItem__router-link">
+      第三方发票平台模式
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Vendor_API_List.html" class="NavigationItem__router-link">
+      商户接口列表
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Invoicing_Platform_API_List.html" class="NavigationItem__router-link">
+      开票平台接口列表
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-3"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Quick_issuing/Introduction.html" class="NavigationItem__router-link">
+      极速开发票
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Quick_issuing/Introduction.html" class="NavigationItem__router-link">
+      方案介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Quick_issuing/Access_Request.html" class="NavigationItem__router-link">
+      接入申请
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Quick_issuing/Role_and_Process_Illustrations.html" class="NavigationItem__router-link">
+      角色及流程图
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Quick_issuing/Interface_Instructions.html" class="NavigationItem__router-link">
+      接口说明
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Quick_issuing/Large-sized_QR_code_designs.html" class="NavigationItem__router-link">
+      二维码立牌设计
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-3"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Auto-print/Business_Introduction.html" class="NavigationItem__router-link">
+      电子发票自助打印
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Auto-print/Business_Introduction.html" class="NavigationItem__router-link">
+      业务介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Auto-print/API_Documentation.html" class="NavigationItem__router-link">
+      接口文档
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Auto-print/Design_Materials.html" class="NavigationItem__router-link">
+      设计素材
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/E_Invoice/Reimbursing_Instruction.html" class="NavigationItem__router-link">
+      卡包电子发票报销
+    <!----></a> <!----> <!----></span></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-3"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Nontax_Bill/Introduction.html" class="NavigationItem__router-link">
+      非税票据
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Nontax_Bill/Introduction.html" class="NavigationItem__router-link">
+      业务介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Nontax_Bill/Access.html" class="NavigationItem__router-link">
+      接入财政电子票据
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/weixin_invoice/Nontax_Bill/API_list.html" class="NavigationItem__router-link">
+      接口列表
+    <!----></a> <!----> <!----></span></li></ul></div></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/non_tax_pay.html" class="NavigationItem__router-link">
+      微信非税缴费
+    <!----></a> <!----> <!----></span></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/WeChat_Coupon_Interface.html" class="NavigationItem__router-link">
+      微信卡券
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/WeChat_Coupon_Interface.html" class="NavigationItem__router-link">
+      微信卡券接口
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Update_log.html" class="NavigationItem__router-link">
+      更新日志
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Create_a_Coupon_Voucher_or_Card.html" class="NavigationItem__router-link">
+      创建卡券
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Distributing_Coupons_Vouchers_and_Cards.html" class="NavigationItem__router-link">
+      投放卡券
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Redeeming_a_coupon_voucher_or_card.html" class="NavigationItem__router-link">
+      核销卡券
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Managing_Coupons_Vouchers_and_Cards.html" class="NavigationItem__router-link">
+      管理卡券
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Coupons_Vouchers_and_Cards_Event_Push_Messages.html" class="NavigationItem__router-link">
+      卡券事件推送
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Coupons-Mini_Program_Start_Up.html" class="NavigationItem__router-link">
+      卡券-小程序打通
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/gift_card.html" class="NavigationItem__router-link">
+      微信礼品卡
+    <!----></a> <!----> <!----></span></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-3"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Membership_Cards/introduction.html" class="NavigationItem__router-link">
+      会员卡专区
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Membership_Cards/introduction.html" class="NavigationItem__router-link">
+      玩法介绍
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Membership_Cards/Create_a_membership_card.html" class="NavigationItem__router-link">
+      创建会员卡
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Membership_Cards/Manage_Member_Card.html" class="NavigationItem__router-link">
+      管理会员卡
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Special_ticket.html" class="NavigationItem__router-link">
+      特殊票券
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Card_coupons_error_code.html" class="NavigationItem__router-link">
+      卡券错误码
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/card/Third-party_developer_mode.html" class="NavigationItem__router-link">
+      第三方开发者模式
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/WeChat_Store.html" class="NavigationItem__router-link">
+      微信门店
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/medicalassistant.html" class="NavigationItem__router-link">
+      微信就医助手
+    <!----></a> <!----> <!----></span></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-2"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/product/elderMedical/elderMedical-api.html" class="NavigationItem__router-link">
+      微信长辈就医
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/elderMedical/elderMedical-api.html" class="NavigationItem__router-link">
+      开发文档
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/elderMedical/elderMedical-sdk.html" class="NavigationItem__router-link">
+      SDK方案
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/elderMedical/elderMedical-designstandards.html" class="NavigationItem__router-link">
+      设计规范
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/product/Unique_Item_Code.html" class="NavigationItem__router-link">
+      微信“一物一码”
+    <!----></a> <!----> <!----></span></li></ul></div></li><li><div class="NavigationLevel NavigationLevel--closed NavigationLevel--level-1"><div class="NavigationLevel__parent"><span class="NavigationToggle NavigationToggle--closed"><span class="NavigationToggle__icon NavigationToggle__icon--closed"></span></span> <span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/" class="NavigationItem__router-link router-link-active">
+      微信网页开发
+    <!----></a> <!----> <!----></span></div> <ul class="NavigationLevel__children"><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/start.html" class="NavigationItem__router-link">
+      开始开发
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/auth.html" class="NavigationItem__router-link">
+      微信网页授权
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/get_quota.html" class="NavigationItem__router-link">
+      微信网页授权接口调用额度提升指引
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/authorization_change.html" class="NavigationItem__router-link">
+      用户授权信息变更事件推送
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/jssdk.html" aria-current="page" class="NavigationItem__router-link router-link-exact-active router-link-active">
+      JS-SDK
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/opentag.html" class="NavigationItem__router-link">
+      开放标签
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/adapt_ios.html" class="NavigationItem__router-link">
+      iOS WKWebview网页适配
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/adapt_harmonyos.html" class="NavigationItem__router-link">
+      鸿蒙网页适配
+    <!----></a> <!----> <!----></span></li><li><span class="NavigationItem"><!----> <a href="/doc/service/guide/h5/darkmode.html" class="NavigationItem__router-link">
+      DarkMode 适配指南
+    <!----></a> <!----> <!----></span></li></ul></div></li></ul></div></div> </aside></div> <div class="page__wrp"><main class="page"><div class="page-inner" style="min-height:0px;"> <div id="docContent"><div class="Breadcrumb"></div> <div class="content custom"><h1 id="JS-SDK-使用说明"><a href="#JS-SDK-使用说明" class="header-anchor">#</a> JS-SDK 使用说明</h1> <h2 id="概述"><a href="#概述" class="header-anchor">#</a> 概述</h2> <p>微信JS-SDK是<a href="https://mp.weixin.qq.com/cgi-bin/loginpage?t=wxm2-login&lang=zh_CN" target="_blank">微信公众平台</a> 面向网页开发者提供的基于微信内的网页开发工具包。</p> <p>通过使用微信JS-SDK，网页开发者可借助微信高效地使用拍照、选图、语音、位置等手机系统的能力，同时可以直接使用微信分享、扫一扫、卡券、支付等微信特有的能力，为微信用户提供更优质的网页体验。</p> <p>此文档面向网页开发者介绍微信JS-SDK如何使用及相关注意事项。</p> <h2 id="JSSDK使用步骤"><a href="#JSSDK使用步骤" class="header-anchor">#</a> JSSDK使用步骤</h2> <h4 id="步骤一：绑定域名"><a href="#步骤一：绑定域名" class="header-anchor">#</a> 步骤一：绑定域名</h4> <p>可登录微信公众平台进入“服务号设置”的“功能设置”里填写“JS接口安全域名”。或者前往<a href="https://developers.weixin.qq.com/platform/" target="_blank">微信开发者平台</a> - 服务号或服务号 - 基本信息 - 开发信息 进行修改</p> <img width="650px" src="https://testchu-7gy8occc8dcc14c3-1304825656.tcloudbaseapp.com/img%2Fmelody%2F202503031018992.png"> <ul><li>绑定父级域名，其合法的子域名可用</li> <li>至多可填写 5 个合法域名，</li> <li>但不支持 IP 地址、端口号及短链域名，此外，域名需通过 ICP 备案的验证，新备案域名需 24 小时后才可配置</li></ul> <blockquote><p>备注：登录后可在“开发者中心”查看对应的接口权限。</p></blockquote> <h4 id="步骤二：引入JS文件"><a href="#步骤二：引入JS文件" class="header-anchor">#</a> 步骤二：引入JS文件</h4> <p>在需要调用JS接口的页面引入如下JS文件，（支持https）：http://res.wx.qq.com/open/js/jweixin-1.6.0.js</p> <p>如需进一步提升服务稳定性，当上述资源不可访问时，可改访问：http://res2.wx.qq.com/open/js/jweixin-1.6.0.js （支持https）。</p> <p>备注：支持使用 AMD/CMD 标准模块加载方法加载</p> <h4 id="步骤三：通过config接口注入权限验证配置"><a href="#步骤三：通过config接口注入权限验证配置" class="header-anchor">#</a> 步骤三：通过config接口注入权限验证配置</h4> <p>所有需要使用JS-SDK的页面必须先注入配置信息，否则将无法调用（同一个url仅需调用一次，对于变化url的SPA的web app可在每次url变化时进行调用,目前Android微信客户端不支持pushState的H5新特性，所以使用pushState来实现web app的页面会导致签名失败，此问题会在Android6.2中修复）。</p> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">config</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">debug</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span> <span class="token comment">// 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。</span>
+  <span class="token literal-property property">appId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 必填，服务号的唯一标识</span>
+  <span class="token literal-property property">timestamp</span><span class="token operator">:</span> <span class="token punctuation">,</span> <span class="token comment">// 必填，生成签名的时间戳</span>
+  <span class="token literal-property property">nonceStr</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 必填，生成签名的随机串</span>
+  <span class="token literal-property property">signature</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span><span class="token comment">// 必填，签名</span>
+  <span class="token literal-property property">jsApiList</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token comment">// 必填，需要使用的JS接口列表</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>签名算法见文末的<a href="#62">附录1</a>，所有JS接口列表见文末的<a href="#63">附录2</a></p> <p>注意：如果使用的是<a href="https://developers.weixin.qq.com/miniprogram/dev/wxcloudservice/wxcloud/guide/staticstorage/introduction" target="_blank">小程序云开发静态网站托管</a>的域名的网页，可以免鉴权直接跳任意合法合规小程序，调用 wx.config 时 appId 需填入非个人主体的已认证小程序，不需计算签名，timestamp、nonceStr、signature 填入非空任意值即可。</p> <h4 id="步骤四：通过ready接口处理成功验证"><a href="#步骤四：通过ready接口处理成功验证" class="header-anchor">#</a> 步骤四：通过ready接口处理成功验证</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">ready</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  <span class="token comment">// config信息验证后会执行ready方法，所有接口调用都必须在config接口获得结果之后，config是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在ready函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在ready函数中。</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="步骤五：通过error接口处理失败验证"><a href="#步骤五：通过error接口处理失败验证" class="header-anchor">#</a> 步骤五：通过error接口处理失败验证</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  <span class="token comment">// config信息验证失败会执行error函数，如签名过期导致验证失败，具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，对于SPA可以在这里更新签名。</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h2 id="接口调用说明"><a href="#接口调用说明" class="header-anchor">#</a> 接口调用说明</h2> <p>所有接口通过wx对象(也可使用jWeixin对象)来调用，参数是一个对象，除了每个接口本身需要传的参数之外，还有以下通用参数：</p> <ol><li>success：接口调用成功时执行的回调函数。</li> <li>fail：接口调用失败时执行的回调函数。</li> <li>complete：接口调用完成时执行的回调函数，无论成功或失败都会执行。</li> <li>cancel：用户点击取消时的回调函数，仅部分有用户取消操作的api才会用到。</li> <li>trigger: 监听Menu中的按钮点击时触发的方法，该方法仅支持Menu中的相关接口。</li></ol> <p>备注：不要尝试在trigger中使用ajax异步请求修改本次分享的内容，因为客户端分享操作是一个同步操作，这时候使用ajax的回包会还没有返回。</p> <p>以上几个函数都带有一个参数，类型为对象，其中除了每个接口本身返回的数据之外，还有一个通用属性errMsg，其值格式如下：</p> <p>调用成功时：&quot;xxx:ok&quot; ，其中xxx为调用的接口名</p> <p>用户取消时：&quot;xxx:cancel&quot;，其中xxx为调用的接口名</p> <p>调用失败时：其值为具体错误信息</p> <h3 id="基础接口"><a href="#基础接口" class="header-anchor">#</a> 基础接口</h3> <h4 id="判断当前客户端版本是否支持指定JS"><a href="#判断当前客户端版本是否支持指定JS" class="header-anchor">#</a> 判断当前客户端版本是否支持指定JS</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">checkJsApi</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">jsApiList</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">'chooseImage'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token comment">// 需要检测的JS接口列表，所有JS接口列表见附录2,</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 以键值对的形式返回，可用的api值true，不可用为false</span>
+  <span class="token comment">// 如：{&quot;checkResult&quot;:{&quot;chooseImage&quot;:true},&quot;errMsg&quot;:&quot;checkJsApi:ok&quot;}</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：checkJsApi接口是客户端6.0.2新引入的一个预留接口，第一期开放的接口均可不使用checkJsApi来检测。</p> <h3 id="分享接口"><a href="#分享接口" class="header-anchor">#</a> 分享接口</h3> <p>请注意，不要有诱导分享等违规行为，对于诱导分享行为将永久回收服务号接口权限，详细规则请查看：<a href="https://kf.qq.com/faq/161223JfINJV1612237buYri.html" target="_blank">朋友圈管理常见问题</a></p> <p>请注意，原有的 <code>wx.onMenuShareTimeline</code>、<code>wx.onMenuShareAppMessage</code>、<code>wx.onMenuShareQQ</code>、<code>wx.onMenuShareQZone</code> 接口，即将废弃。请尽快迁移使用客户端6.7.2及JSSDK 1.4.0以上版本支持的 <code>wx.updateAppMessageShareData</code>、<code>wx.updateTimelineShareData</code>接口。</p> <h4 id="自定义“分享给朋友”及“分享到QQ”按钮的分享内容（1-4-0）"><a href="#自定义“分享给朋友”及“分享到QQ”按钮的分享内容（1-4-0）" class="header-anchor">#</a> 自定义“分享给朋友”及“分享到QQ”按钮的分享内容（1.4.0）</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">ready</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>   <span class="token comment">//需在用户可能点击分享按钮前就先调用</span>
+  wx<span class="token punctuation">.</span><span class="token function">updateAppMessageShareData</span><span class="token punctuation">(</span><span class="token punctuation">{</span> 
+    <span class="token literal-property property">title</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享标题</span>
+    <span class="token literal-property property">desc</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享描述</span>
+    <span class="token literal-property property">link</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享链接，该链接域名或路径必须与当前页面对应的服务号JS安全域名一致</span>
+    <span class="token literal-property property">imgUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享图标</span>
+    <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// 设置成功</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+</code></pre></div><h4 id="自定义“分享到朋友圈”及“分享到QQ空间”按钮的分享内容（1-4-0）"><a href="#自定义“分享到朋友圈”及“分享到QQ空间”按钮的分享内容（1-4-0）" class="header-anchor">#</a> 自定义“分享到朋友圈”及“分享到QQ空间”按钮的分享内容（1.4.0）</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">ready</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>      <span class="token comment">//需在用户可能点击分享按钮前就先调用</span>
+  wx<span class="token punctuation">.</span><span class="token function">updateTimelineShareData</span><span class="token punctuation">(</span><span class="token punctuation">{</span> 
+    <span class="token literal-property property">title</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享标题</span>
+    <span class="token literal-property property">link</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享链接，该链接域名或路径必须与当前页面对应的服务号JS安全域名一致</span>
+    <span class="token literal-property property">imgUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享图标</span>
+    <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+      <span class="token comment">// 设置成功</span>
+    <span class="token punctuation">}</span>
+  <span class="token punctuation">}</span><span class="token punctuation">)</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+</code></pre></div><h4 id="获取“分享到朋友圈”按钮点击状态及自定义分享内容接口（即将废弃）"><a href="#获取“分享到朋友圈”按钮点击状态及自定义分享内容接口（即将废弃）" class="header-anchor">#</a> 获取“分享到朋友圈”按钮点击状态及自定义分享内容接口（即将废弃）</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onMenuShareTimeline</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">title</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享标题</span>
+  <span class="token literal-property property">link</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享链接，该链接域名或路径必须与当前页面对应的服务号JS安全域名一致</span>
+  <span class="token literal-property property">imgUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享图标</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 用户点击了分享后执行的回调函数</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">,</span>
+</code></pre></div><h4 id="获取“分享给朋友”按钮点击状态及自定义分享内容接口（即将废弃）"><a href="#获取“分享给朋友”按钮点击状态及自定义分享内容接口（即将废弃）" class="header-anchor">#</a> 获取“分享给朋友”按钮点击状态及自定义分享内容接口（即将废弃）</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onMenuShareAppMessage</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">title</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享标题</span>
+  <span class="token literal-property property">desc</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享描述</span>
+  <span class="token literal-property property">link</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享链接，该链接域名或路径必须与当前页面对应的服务号JS安全域名一致</span>
+  <span class="token literal-property property">imgUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享图标</span>
+  <span class="token literal-property property">type</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享类型,music、video或link，不填默认为link</span>
+  <span class="token literal-property property">dataUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 如果type是music或video，则要提供数据链接，默认为空</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token comment">// 用户点击了分享后执行的回调函数</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="获取“分享到QQ”按钮点击状态及自定义分享内容接口（即将废弃）"><a href="#获取“分享到QQ”按钮点击状态及自定义分享内容接口（即将废弃）" class="header-anchor">#</a> 获取“分享到QQ”按钮点击状态及自定义分享内容接口（即将废弃）</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onMenuShareQQ</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">title</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享标题</span>
+  <span class="token literal-property property">desc</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享描述</span>
+  <span class="token literal-property property">link</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享链接</span>
+  <span class="token literal-property property">imgUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享图标</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 用户确认分享后执行的回调函数</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token function-variable function">cancel</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 用户取消分享后执行的回调函数</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="获取“分享到QQ空间”按钮点击状态及自定义分享内容接口（即将废弃）"><a href="#获取“分享到QQ空间”按钮点击状态及自定义分享内容接口（即将废弃）" class="header-anchor">#</a> 获取“分享到QQ空间”按钮点击状态及自定义分享内容接口（即将废弃）</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onMenuShareQZone</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">title</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享标题</span>
+  <span class="token literal-property property">desc</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享描述</span>
+  <span class="token literal-property property">link</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享链接</span>
+  <span class="token literal-property property">imgUrl</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 分享图标</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 用户确认分享后执行的回调函数</span>
+  <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  <span class="token function-variable function">cancel</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token comment">// 用户取消分享后执行的回调函数</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="图像接口"><a href="#图像接口" class="header-anchor">#</a> 图像接口</h3> <h4 id="拍照或从手机相册中选图接口"><a href="#拍照或从手机相册中选图接口" class="header-anchor">#</a> 拍照或从手机相册中选图接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">chooseImage</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">count</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 默认9</span>
+  <span class="token literal-property property">sizeType</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">'original'</span><span class="token punctuation">,</span> <span class="token string">'compressed'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token comment">// 可以指定是原图还是压缩图，默认二者都有</span>
+  <span class="token literal-property property">sourceType</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">'album'</span><span class="token punctuation">,</span> <span class="token string">'camera'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token comment">// 可以指定来源是相册还是相机，默认二者都有</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">var</span> localIds <span class="token operator">=</span> res<span class="token punctuation">.</span>localIds<span class="token punctuation">;</span> <span class="token comment">// 返回选定照片的本地ID列表，localId可以作为img标签的src属性显示图片</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="预览图片接口"><a href="#预览图片接口" class="header-anchor">#</a> 预览图片接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">previewImage</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">current</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 当前显示图片的http链接</span>
+  <span class="token literal-property property">urls</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token comment">// 需要预览的图片http链接列表</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="上传图片接口"><a href="#上传图片接口" class="header-anchor">#</a> 上传图片接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">uploadImage</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 需要上传的图片的本地ID，由chooseImage接口获得</span>
+  <span class="token literal-property property">isShowProgressTips</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 默认为1，显示进度提示</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> serverId <span class="token operator">=</span> res<span class="token punctuation">.</span>serverId<span class="token punctuation">;</span> <span class="token comment">// 返回图片的服务器端ID</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：上传图片有效期3天，可用微信多媒体接口下载图片到自己的服务器，此处获得的 serverId 即 media_id。</p> <h4 id="下载图片接口"><a href="#下载图片接口" class="header-anchor">#</a> 下载图片接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">downloadImage</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">serverId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 需要下载的图片的服务器端ID，由uploadImage接口获得</span>
+  <span class="token literal-property property">isShowProgressTips</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 默认为1，显示进度提示</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> localId <span class="token operator">=</span> res<span class="token punctuation">.</span>localId<span class="token punctuation">;</span> <span class="token comment">// 返回图片下载后的本地ID</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="获取本地图片接口"><a href="#获取本地图片接口" class="header-anchor">#</a> 获取本地图片接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">getLocalImgData</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 图片的localID</span>
+  <span class="token literal-property property">compressionRatio</span><span class="token operator">:</span> <span class="token number">0.3</span><span class="token punctuation">,</span> <span class="token comment">// 压缩比例，iOS 默认值 0.3</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> localData <span class="token operator">=</span> res<span class="token punctuation">.</span>localData<span class="token punctuation">;</span> <span class="token comment">// localData是图片的base64数据，可以用img标签显示</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：此接口仅在 iOS WKWebview 下提供，用于兼容 iOS WKWebview 不支持 localId 直接显示图片的问题。具体可参考《<a href="adapt_ios" target="_blank">iOS WKWebview网页开发适配指南</a>》</p> <h3 id="音频接口"><a href="#音频接口" class="header-anchor">#</a> 音频接口</h3> <h4 id="开始录音接口"><a href="#开始录音接口" class="header-anchor">#</a> 开始录音接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">startRecord</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="停止录音接口"><a href="#停止录音接口" class="header-anchor">#</a> 停止录音接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">stopRecord</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> localId <span class="token operator">=</span> res<span class="token punctuation">.</span>localId<span class="token punctuation">;</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="监听录音自动停止接口"><a href="#监听录音自动停止接口" class="header-anchor">#</a> 监听录音自动停止接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onVoiceRecordEnd</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+<span class="token comment">// 录音时间超过一分钟没有停止的时候会执行 complete 回调</span>
+  <span class="token function-variable function">complete</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword">var</span> localId <span class="token operator">=</span> res<span class="token punctuation">.</span>localId<span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="播放语音接口"><a href="#播放语音接口" class="header-anchor">#</a> 播放语音接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">playVoice</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span> <span class="token comment">// 需要播放的音频的本地ID，由stopRecord接口获得</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="暂停播放接口"><a href="#暂停播放接口" class="header-anchor">#</a> 暂停播放接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">pauseVoice</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span> <span class="token comment">// 需要暂停的音频的本地ID，由stopRecord接口获得</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="停止播放接口"><a href="#停止播放接口" class="header-anchor">#</a> 停止播放接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">stopVoice</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span> <span class="token comment">// 需要停止的音频的本地ID，由stopRecord接口获得</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="监听语音播放完毕接口"><a href="#监听语音播放完毕接口" class="header-anchor">#</a> 监听语音播放完毕接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onVoicePlayEnd</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> localId <span class="token operator">=</span> res<span class="token punctuation">.</span>localId<span class="token punctuation">;</span> <span class="token comment">// 返回音频的本地ID</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="上传语音接口"><a href="#上传语音接口" class="header-anchor">#</a> 上传语音接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">uploadVoice</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 需要上传的音频的本地ID，由stopRecord接口获得</span>
+  <span class="token literal-property property">isShowProgressTips</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 默认为1，显示进度提示</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> serverId <span class="token operator">=</span> res<span class="token punctuation">.</span>serverId<span class="token punctuation">;</span> <span class="token comment">// 返回音频的服务器端ID</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：上传语音有效期3天，可用微信多媒体接口下载语音到自己的服务器，此处获得的 serverId 即 media_id，参考文档 .目前多媒体文件下载接口的频率限制为10000次/天，如需要调高频率，请登录微信公众平台，在开发 - 接口权限的列表中，申请提高临时上限。</p> <img width="550px" src="https://mmbiz.qpic.cn/mmbiz/PiajxSqBRaEIQxibpLbyuSKwKpliceQ7em8icguia8NDibe0IySWMOlL22PJXx1hvDd8HFo9bBhbJG8iaGe7pKFj1e7aA/0?wx_fmt=png" alt data-width="608" data-ratio="0.4605263157894737"> <h4 id="下载语音接口"><a href="#下载语音接口" class="header-anchor">#</a> 下载语音接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">downloadVoice</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">serverId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 需要下载的音频的服务器端ID，由uploadVoice接口获得</span>
+  <span class="token literal-property property">isShowProgressTips</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 默认为1，显示进度提示</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> localId <span class="token operator">=</span> res<span class="token punctuation">.</span>localId<span class="token punctuation">;</span> <span class="token comment">// 返回音频的本地ID</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="智能接口"><a href="#智能接口" class="header-anchor">#</a> 智能接口</h3> <h4 id="识别音频并返回识别结果接口"><a href="#识别音频并返回识别结果接口" class="header-anchor">#</a> 识别音频并返回识别结果接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">translateVoice</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">localId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 需要识别的音频的本地Id，由录音相关接口获得</span>
+  <span class="token literal-property property">isShowProgressTips</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 默认为1，显示进度提示</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token function">alert</span><span class="token punctuation">(</span>res<span class="token punctuation">.</span>translateResult<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// 语音识别的结果</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="设备信息"><a href="#设备信息" class="header-anchor">#</a> 设备信息</h3> <h4 id="获取网络状态接口"><a href="#获取网络状态接口" class="header-anchor">#</a> 获取网络状态接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">getNetworkType</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> networkType <span class="token operator">=</span> res<span class="token punctuation">.</span>networkType<span class="token punctuation">;</span> <span class="token comment">// 返回网络类型2g，3g，4g，wifi</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="地理位置"><a href="#地理位置" class="header-anchor">#</a> 地理位置</h3> <h4 id="使用微信内置地图查看位置接口"><a href="#使用微信内置地图查看位置接口" class="header-anchor">#</a> 使用微信内置地图查看位置接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">openLocation</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">latitude</span><span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token comment">// 纬度，浮点数，范围为90 ~ -90</span>
+  <span class="token literal-property property">longitude</span><span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token comment">// 经度，浮点数，范围为180 ~ -180。</span>
+  <span class="token literal-property property">name</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 位置名</span>
+  <span class="token literal-property property">address</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 地址详情说明</span>
+  <span class="token literal-property property">scale</span><span class="token operator">:</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token comment">// 地图缩放级别,整型值,范围从1~28。默认为最大</span>
+  <span class="token literal-property property">infoUrl</span><span class="token operator">:</span> <span class="token string">''</span> <span class="token comment">// 在查看位置界面底部显示的超链接,可点击跳转</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="获取地理位置接口"><a href="#获取地理位置接口" class="header-anchor">#</a> 获取地理位置接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">getLocation</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">type</span><span class="token operator">:</span> <span class="token string">'wgs84'</span><span class="token punctuation">,</span> <span class="token comment">// 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> latitude <span class="token operator">=</span> res<span class="token punctuation">.</span>latitude<span class="token punctuation">;</span> <span class="token comment">// 纬度，浮点数，范围为90 ~ -90</span>
+    <span class="token keyword">var</span> longitude <span class="token operator">=</span> res<span class="token punctuation">.</span>longitude<span class="token punctuation">;</span> <span class="token comment">// 经度，浮点数，范围为180 ~ -180。</span>
+    <span class="token keyword">var</span> speed <span class="token operator">=</span> res<span class="token punctuation">.</span>speed<span class="token punctuation">;</span> <span class="token comment">// 速度，以米/每秒计</span>
+    <span class="token keyword">var</span> accuracy <span class="token operator">=</span> res<span class="token punctuation">.</span>accuracy<span class="token punctuation">;</span> <span class="token comment">// 位置精度</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="摇一摇周边"><a href="#摇一摇周边" class="header-anchor">#</a> 摇一摇周边</h3> <h4 id="开启查找周边ibeacon设备接口"><a href="#开启查找周边ibeacon设备接口" class="header-anchor">#</a> 开启查找周边ibeacon设备接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">startSearchBeacons</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">ticket</span><span class="token operator">:</span><span class="token string">&quot;&quot;</span><span class="token punctuation">,</span>  <span class="token comment">//摇周边的业务ticket, 系统自动添加在摇出来的页面链接后面</span>
+  <span class="token function-variable function">complete</span><span class="token operator">:</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">argv</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    <span class="token comment">//开启查找完成后的回调函数</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：如需接入摇一摇周边功能，请参考：申请开通摇一摇周边</p> <h4 id="关闭查找周边ibeacon设备接口"><a href="#关闭查找周边ibeacon设备接口" class="header-anchor">#</a> 关闭查找周边ibeacon设备接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">stopSearchBeacons</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token function-variable function">complete</span><span class="token operator">:</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    <span class="token comment">//关闭查找完成后的回调函数</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="监听周边ibeacon设备接口"><a href="#监听周边ibeacon设备接口" class="header-anchor">#</a> 监听周边ibeacon设备接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">onSearchBeacons</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token function-variable function">complete</span><span class="token operator">:</span><span class="token keyword">function</span><span class="token punctuation">(</span><span class="token parameter">argv</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    <span class="token comment">//回调函数，可以数组形式取得该商家注册的在周边的相关设备列表</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：上述摇一摇周边接口使用注意事项及更多返回结果说明，请参考：摇一摇周边获取设备信息</p> <h3 id="界面操作"><a href="#界面操作" class="header-anchor">#</a> 界面操作</h3> <h4 id="关闭当前网页窗口接口"><a href="#关闭当前网页窗口接口" class="header-anchor">#</a> 关闭当前网页窗口接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">closeWindow</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="批量隐藏功能按钮接口"><a href="#批量隐藏功能按钮接口" class="header-anchor">#</a> 批量隐藏功能按钮接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">hideMenuItems</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">menuList</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token comment">// 要隐藏的菜单项，只能隐藏“传播类”和“保护类”按钮，所有menu项见附录3</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="批量显示功能按钮接口"><a href="#批量显示功能按钮接口" class="header-anchor">#</a> 批量显示功能按钮接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">showMenuItems</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">menuList</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token comment">// 要显示的菜单项，所有menu项见附录3</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h4 id="隐藏所有非基础按钮接口"><a href="#隐藏所有非基础按钮接口" class="header-anchor">#</a> 隐藏所有非基础按钮接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">hideAllNonBaseMenuItem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">// “基本类”按钮详见附录3</span>
+</code></pre></div><h4 id="显示所有功能按钮接口"><a href="#显示所有功能按钮接口" class="header-anchor">#</a> 显示所有功能按钮接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">showAllNonBaseMenuItem</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="微信扫一扫"><a href="#微信扫一扫" class="header-anchor">#</a> 微信扫一扫</h3> <h4 id="调起微信扫一扫接口"><a href="#调起微信扫一扫接口" class="header-anchor">#</a> 调起微信扫一扫接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">scanQRCode</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">needResult</span><span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token comment">// 默认为0，扫描结果由微信处理，1则直接返回扫描结果，</span>
+  <span class="token literal-property property">scanType</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">&quot;qrCode&quot;</span><span class="token punctuation">,</span><span class="token string">&quot;barCode&quot;</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token comment">// 可以指定扫二维码还是一维码，默认二者都有</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> result <span class="token operator">=</span> res<span class="token punctuation">.</span>resultStr<span class="token punctuation">;</span> <span class="token comment">// 当needResult 为 1 时，扫码返回的结果</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="微信卡券"><a href="#微信卡券" class="header-anchor">#</a> 微信卡券</h3> <p>微信卡券接口中使用的签名凭证api_ticket，与步骤三中config使用的签名凭证jsapi_ticket不同，开发者在调用微信卡券JS-SDK的过程中需依次完成两次不同的签名，并确保凭证的缓存。</p> <h4 id="获取api-ticket"><a href="#获取api-ticket" class="header-anchor">#</a> 获取api_ticket</h4> <p>api_ticket 是用于调用微信卡券JS API的临时票据，有效期为7200 秒，通过access_token 来获取。</p> <p>开发者注意事项：</p> <ol><li><p>此用于卡券接口签名的api_ticket与步骤三中通过config接口注入权限验证配置使用的jsapi_ticket不同。</p></li> <li><p>由于获取api_ticket 的api 调用次数非常有限，频繁刷新api_ticket 会导致api调用受限，影响自身业务，开发者需在自己的服务存储与更新api_ticket。</p></li></ol> <p><strong>接口调用请求说明</strong></p> <blockquote><p>http请求方式: GET
+https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=ACCESS_TOKEN&amp;type=wx_card</p></blockquote> <p><strong>参数说明</strong></p> <div class="table-wrp"><table><thead><tr><th>参数</th> <th>是否必须</th> <th>说明</th></tr></thead> <tbody><tr><td>access_token</td> <td>是</td> <td>接口调用凭证</td></tr></tbody></table></div><p><strong>返回数据</strong></p> <p><strong>数据示例：</strong></p> <div class="language-json extra-class"><pre class="language-json"><code v-pre><span class="token punctuation">{</span>
+  <span class="token property">&quot;errcode&quot;</span><span class="token operator">:</span><span class="token number">0</span><span class="token punctuation">,</span>
+  <span class="token property">&quot;errmsg&quot;</span><span class="token operator">:</span><span class="token string">&quot;ok&quot;</span><span class="token punctuation">,</span>
+  <span class="token property">&quot;ticket&quot;</span><span class="token operator">:</span><span class="token string">&quot;bxLdikRXVbTPdHSM05e5u5sUoXNKdvsdshFKA&quot;</span><span class="token punctuation">,</span>
+  <span class="token property">&quot;expires_in&quot;</span><span class="token operator">:</span><span class="token number">7200</span>
+<span class="token punctuation">}</span>
+</code></pre></div><div class="table-wrp"><table><thead><tr><th>参数名</th> <th>描述</th></tr></thead> <tbody><tr><td>errcode</td> <td>错误码</td></tr> <tr><td>errmsg</td> <td>错误信息</td></tr> <tr><td>ticket</td> <td>api_ticket，卡券接口中签名所需凭证</td></tr> <tr><td>expires_in</td> <td>有效时间</td></tr></tbody></table></div><p>错误码</p> <div class="table-wrp"><table><thead><tr><th>错误码</th> <th>错误信息</th></tr></thead> <tbody><tr><td>40097</td> <td>type参数错误</td></tr></tbody></table></div><p><span id="55"></span></p> <h4 id="拉取适用卡券列表并获取用户选择信息"><a href="#拉取适用卡券列表并获取用户选择信息" class="header-anchor">#</a> 拉取适用卡券列表并获取用户选择信息</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">chooseCard</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">shopId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 门店Id</span>
+  <span class="token literal-property property">cardType</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 卡券类型</span>
+  <span class="token literal-property property">cardId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 卡券Id</span>
+  <span class="token literal-property property">timestamp</span><span class="token operator">:</span> <span class="token number">0</span><span class="token punctuation">,</span> <span class="token comment">// 卡券签名时间戳</span>
+  <span class="token literal-property property">nonceStr</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 卡券签名随机串</span>
+  <span class="token literal-property property">signType</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 签名方式，默认'SHA1'</span>
+  <span class="token literal-property property">cardSign</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span> <span class="token comment">// 卡券签名</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> cardList<span class="token operator">=</span> res<span class="token punctuation">.</span>cardList<span class="token punctuation">;</span> <span class="token comment">// 用户选中的卡券列表信息</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><div class="table-wrp"><table><thead><tr><th>参数名</th> <th>必填</th> <th>类型</th> <th>示例值</th> <th>描述</th></tr></thead> <tbody><tr><td>shopId</td> <td>否</td> <td>string(24)</td> <td>1234</td> <td>门店ID。shopID用于筛选出拉起带有指定location_list(shopID)的卡券列表，非必填。</td></tr> <tr><td>cardType</td> <td>否</td> <td>string(24)</td> <td>GROUPON</td> <td>卡券类型，用于拉起指定卡券类型的卡券列表。当cardType为空时，默认拉起所有卡券的列表，非必填。</td></tr> <tr><td>cardId</td> <td>否</td> <td>string(32)</td> <td>p1Pj9jr90_SQRaVqYI239Ka1erk</td> <td>卡券ID，用于拉起指定cardId的卡券列表，当cardId为空时，默认拉起所有卡券的列表，非必填。</td></tr> <tr><td>timestamp</td> <td>是</td> <td>string(32)</td> <td>14300000000</td> <td>时间戳。</td></tr> <tr><td>nonceStr</td> <td>是</td> <td>string(32)</td> <td>sduhi123</td> <td>随机字符串。</td></tr> <tr><td>signType</td> <td>是</td> <td>string(32)</td> <td>SHA1</td> <td>签名方式，目前仅支持SHA1</td></tr> <tr><td>cardSign</td> <td>是</td> <td>string(64)</td> <td>abcsdijcous123</td> <td>签名。</td></tr></tbody></table></div><p><code>cardSign</code> 详见附录4。</p> <p>开发者特别注意：签名错误会导致拉取卡券列表异常为空，请仔细检查参与签名的参数有效性。</p> <p><strong>特别提醒</strong></p> <p>拉取列表仅与用户本地卡券有关，拉起列表异常为空的情况通常有三种：签名错误、时间戳无效、筛选机制有误。请开发者依次排查定位原因。</p> <p><span id="56"></span></p> <h4 id="批量添加卡券接口"><a href="#批量添加卡券接口" class="header-anchor">#</a> 批量添加卡券接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">addCard</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">cardList</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">{</span>
+    <span class="token literal-property property">cardId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">cardExt</span><span class="token operator">:</span> <span class="token string">''</span>
+  <span class="token punctuation">}</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token comment">// 需要添加的卡券列表</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> cardList <span class="token operator">=</span> res<span class="token punctuation">.</span>cardList<span class="token punctuation">;</span> <span class="token comment">// 添加的卡券列表信息</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p><code>cardExt</code> 详见附录4，开发者若调用接口报签名错误、已领完等异常情况可以参照：<a href="http://mp.weixin.qq.com/s/WhYpWmfuhUBw2wseTXdt2A" target="_blank">卡券签名错误排查方法</a></p> <p><span id="57"></span></p> <h4 id="查看微信卡包中的卡券接口"><a href="#查看微信卡包中的卡券接口" class="header-anchor">#</a> 查看微信卡包中的卡券接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">openCard</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token literal-property property">cardList</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">{</span>
+    <span class="token literal-property property">cardId</span><span class="token operator">:</span> <span class="token string">''</span><span class="token punctuation">,</span>
+    <span class="token literal-property property">code</span><span class="token operator">:</span> <span class="token string">''</span>
+  <span class="token punctuation">}</span><span class="token punctuation">]</span><span class="token comment">// 需要打开的卡券列表</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><h3 id="微信支付"><a href="#微信支付" class="header-anchor">#</a> 微信支付</h3> <h4 id="发起一个微信支付请求"><a href="#发起一个微信支付请求" class="header-anchor">#</a> 发起一个微信支付请求</h4> <p>请参考微信支付文档，JSAPI调起支付API：<a href="https://pay.weixin.qq.com/doc/v3/merchant/4012791857" target="_blank">https://pay.weixin.qq.com/doc/v3/merchant/4012791857</a></p> <p>备注：</p> <p>微信支付V2的开发文档：<a href="https://pay.weixin.qq.com/doc/v2/merchant/4011987975" target="_blank">https://pay.weixin.qq.com/doc/v2/merchant/4011987975</a></p> <p>微信支付V3的开发文档：<a href="https://pay.weixin.qq.com/doc/v3/merchant/4012062524" target="_blank">https://pay.weixin.qq.com/doc/v3/merchant/4012062524</a></p> <h3 id="快速输入"><a href="#快速输入" class="header-anchor">#</a> 快速输入</h3> <h4 id="共享收货地址接口"><a href="#共享收货地址接口" class="header-anchor">#</a> 共享收货地址接口</h4> <div class="language-js extra-class"><pre class="language-js"><code v-pre>wx<span class="token punctuation">.</span><span class="token function">openAddress</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+  <span class="token function-variable function">success</span><span class="token operator">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token parameter">res</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">var</span> userName <span class="token operator">=</span> res<span class="token punctuation">.</span>userName<span class="token punctuation">;</span> <span class="token comment">// 收货人姓名</span>
+    <span class="token keyword">var</span> postalCode <span class="token operator">=</span> res<span class="token punctuation">.</span>postalCode<span class="token punctuation">;</span> <span class="token comment">// 邮编</span>
+    <span class="token keyword">var</span> provinceName <span class="token operator">=</span> res<span class="token punctuation">.</span>provinceName<span class="token punctuation">;</span> <span class="token comment">// 国标收货地址第一级地址（省）</span>
+    <span class="token keyword">var</span> cityName <span class="token operator">=</span> res<span class="token punctuation">.</span>cityName<span class="token punctuation">;</span> <span class="token comment">// 国标收货地址第二级地址（市）</span>
+    <span class="token keyword">var</span> countryName <span class="token operator">=</span> res<span class="token punctuation">.</span>countryName<span class="token punctuation">;</span> <span class="token comment">// 国标收货地址第三级地址（国家）</span>
+    <span class="token keyword">var</span> detailInfo <span class="token operator">=</span> res<span class="token punctuation">.</span>detailInfo<span class="token punctuation">;</span> <span class="token comment">// 详细收货地址信息</span>
+    <span class="token keyword">var</span> nationalCode <span class="token operator">=</span> res<span class="token punctuation">.</span>nationalCode<span class="token punctuation">;</span> <span class="token comment">// 收货地址国家码</span>
+    <span class="token keyword">var</span> telNumber <span class="token operator">=</span> res<span class="token punctuation">.</span>telNumber<span class="token punctuation">;</span> <span class="token comment">// 收货人手机号码</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre></div><p>备注：</p> <p>微信地址共享使用的数据字段包括：</p> <ul><li>收货人姓名</li> <li>地区，省市区三级</li> <li>详细地址</li> <li>邮编</li> <li>联系电话</li></ul> <p>其中，地区对应是国标三级地区码，如“广东省-广州市-天河区”，对应的邮编是是510630。详情参考链接：<a href="http://xzqh.mca.gov.cn/defaultQuery" target="_blank">http://xzqh.mca.gov.cn/defaultQuery</a></p> <p><span id="62"></span></p> <h2 id="附录-JS-SDK使用权限签名算法"><a href="#附录-JS-SDK使用权限签名算法" class="header-anchor">#</a> 附录 | JS-SDK使用权限签名算法</h2> <p><strong>jsapi_ticket</strong></p> <p>生成签名之前必须先了解一下jsapi_ticket，jsapi_ticket是服务号用于调用微信JS接口的临时票据。正常情况下，jsapi_ticket的有效期为7200秒，通过access_token来获取。由于获取jsapi_ticket的api调用次数非常有限，频繁刷新jsapi_ticket会导致api调用受限，影响自身业务，开发者必须在自己的服务全局缓存jsapi_ticket 。</p> <ol><li><p>参考以下文档获取access_token（有效期7200秒，开发者必须在自己的服务全局缓存access_token）：<a href="https://developers.weixin.qq.com/doc/service/api/base/api_getaccesstoken" target="_blank">获取接口调用凭据</a></p></li> <li><p>用第一步拿到的access_token 采用http GET方式请求获得jsapi_ticket（有效期7200秒，开发者必须在自己的服务全局缓存jsapi_ticket）：<a href="https://developers.weixin.qq.com/doc/service/api/invoice/FiscalReceipt/api_getticket" target="_blank">获取sdk临时票据</a></p></li> <li><p>获得jsapi_ticket之后，就可以生成JS-SDK权限验证的签名了。</p></li></ol> <p><strong>签名算法</strong></p> <p>签名生成规则如下：参与签名的字段包括noncestr（随机字符串）, 有效的jsapi_ticket, timestamp（时间戳）, url（当前网页的URL，不包含#及其后面部分） 。对所有待签名参数按照字段名的ASCII 码从小到大排序（字典序）后，使用URL键值对的格式（即key1=value1&amp;key2=value2…）拼接成字符串string1。这里需要注意的是所有参数名均为小写字符。对string1作sha1加密，字段名和字段值都采用原始值，不进行URL 转义。</p> <p>即signature=sha1(string1)。 示例：</p> <div class="language- extra-class"><pre class="language-text"><code v-pre>noncestr=Wm3WZYTPz0wzccnW
+jsapi_ticket=sM4AOVdWfPE4DxkXGEs8VMCPGGVi4C3VM0P37wVUCFvkVAy_90u5h9nbSlYy3-Sl-HhTdfl2fzFy1AOcHKP7qg
+timestamp=1414587457
+url=http://mp.weixin.qq.com?params=value
+</code></pre></div><p>步骤1. 对所有待签名参数按照字段名的ASCII 码从小到大排序（字典序）后，使用URL键值对的格式（即key1=value1&amp;key2=value2…）拼接成字符串string1：</p> <div class="language- extra-class"><pre class="language-text"><code v-pre>jsapi_ticket=sM4AOVdWfPE4DxkXGEs8VMCPGGVi4C3VM0P37wVUCFvkVAy_90u5h9nbSlYy3-Sl-HhTdfl2fzFy1AOcHKP7qg&amp;noncestr=Wm3WZYTPz0wzccnW&amp;timestamp=1414587457&amp;url=http://mp.weixin.qq.com?params=value
+</code></pre></div><p>步骤2. 对string1进行sha1签名，得到signature：</p> <div class="language- extra-class"><pre class="language-text"><code v-pre>0f9de62fce790f9a083d5c99e95740ceb90c27ed
+</code></pre></div><p>注意事项</p> <ol><li><p>签名用的noncestr和timestamp必须与wx.config中的nonceStr和timestamp相同。</p></li> <li><p>签名用的url必须是调用JS接口页面的完整URL。</p></li> <li><p>出于安全考虑，开发者必须在服务器端实现签名的逻辑。</p></li></ol> <p>如出现invalid signature 等错误详见附录5常见错误及解决办法。</p> <p><span id="63"></span></p> <h2 id="附录-所有JS接口列表"><a href="#附录-所有JS接口列表" class="header-anchor">#</a> 附录 | 所有JS接口列表</h2> <p><strong>版本 1.6.0 接口</strong></p> <div class="language-bash extra-class"><pre class="language-bash"><code v-pre>updateAppMessageShareData
+updateTimelineShareData
+onMenuShareTimeline（即将废弃）
+onMenuShareAppMessage（即将废弃）
+onMenuShareQQ（即将废弃）
+onMenuShareWeibo
+onMenuShareQZone
+startRecord
+stopRecord
+onVoiceRecordEnd
+playVoice
+pauseVoice
+stopVoice
+onVoicePlayEnd
+uploadVoice
+downloadVoice
+chooseImage
+previewImage
+uploadImage
+downloadImage
+translateVoice
+getNetworkType
+openLocation
+getLocation
+hideOptionMenu
+showOptionMenu
+hideMenuItems
+showMenuItems
+hideAllNonBaseMenuItem
+showAllNonBaseMenuItem
+closeWindow
+scanQRCode
+addCard
+chooseCard
+openCard
+</code></pre></div><h2 id="附录-所有菜单项列表"><a href="#附录-所有菜单项列表" class="header-anchor">#</a> 附录 | 所有菜单项列表</h2> <p>基本类</p> <div class="language-bash extra-class"><pre class="language-bash"><code v-pre>举报: <span class="token string">&quot;menuItem:exposeArticle&quot;</span>
+调整字体: <span class="token string">&quot;menuItem:setFont&quot;</span>
+日间模式: <span class="token string">&quot;menuItem:dayMode&quot;</span>
+夜间模式: <span class="token string">&quot;menuItem:nightMode&quot;</span>
+刷新: <span class="token string">&quot;menuItem:refresh&quot;</span>
+查看服务号（已添加）: <span class="token string">&quot;menuItem:profile&quot;</span>
+查看服务号（未添加）: <span class="token string">&quot;menuItem:addContact&quot;</span>
+</code></pre></div><p>传播类</p> <div class="language-bash extra-class"><pre class="language-bash"><code v-pre>发送给朋友: <span class="token string">&quot;menuItem:share:appMessage&quot;</span>
+分享到朋友圈: <span class="token string">&quot;menuItem:share:timeline&quot;</span>
+分享到QQ: <span class="token string">&quot;menuItem:share:qq&quot;</span>
+分享到Weibo: <span class="token string">&quot;menuItem:share:weiboApp&quot;</span>
+收藏: <span class="token string">&quot;menuItem:favorite&quot;</span>
+分享到FB: <span class="token string">&quot;menuItem:share:facebook&quot;</span>
+分享到 QQ 空间 <span class="token string">&quot;menuItem:share:QZone&quot;</span>
+</code></pre></div><p>保护类</p> <div class="language-bash extra-class"><pre class="language-bash"><code v-pre>编辑标签: <span class="token string">&quot;menuItem:editTag&quot;</span>
+删除: <span class="token string">&quot;menuItem:delete&quot;</span>
+复制链接: <span class="token string">&quot;menuItem:copyUrl&quot;</span>
+原网页: <span class="token string">&quot;menuItem:originPage&quot;</span>
+阅读模式: <span class="token string">&quot;menuItem:readMode&quot;</span>
+在QQ浏览器中打开: <span class="token string">&quot;menuItem:openWithQQBrowser&quot;</span>
+在Safari中打开: <span class="token string">&quot;menuItem:openWithSafari&quot;</span>
+邮件: <span class="token string">&quot;menuItem:share:email&quot;</span>
+一些特殊服务号: <span class="token string">&quot;menuItem:share:brand&quot;</span>
+</code></pre></div><h2 id="附录-权限对照表"><a href="#附录-权限对照表" class="header-anchor">#</a> 附录 | 权限对照表</h2> <p>不同的服务号类型具备不同的接口权限，具体如下表： 请注意：</p> <p>1、微博认证视作未认证,因此微博认证的服务号不会拥有微信认证服务号特有的接口。</p> <p>2、微信认证分为资质认证和名称认证两部分，只需要资质认证通过，就可获得接口。</p> <div class="table-wrp"><table><thead><tr><th>接口名称</th> <th>未认证订阅号</th> <th>微信认证订阅号</th> <th>未认证服务号</th> <th>微信认证服务号</th></tr></thead> <tbody><tr><td>用户管理-获取用户列表</td> <td></td> <td>有</td> <td></td> <td>有</td></tr> <tr><td>用户管理-获取用户地理位置</td> <td></td> <td></td> <td></td> <td>有</td></tr> <tr><td>微信支付接口</td> <td></td> <td></td> <td></td> <td>需申请</td></tr> <tr><td>微信小店接口</td> <td></td> <td></td> <td></td> <td>需申请</td></tr> <tr><td>微信卡券接口</td> <td></td> <td>需申请</td> <td></td> <td>需申请</td></tr> <tr><td>微信设备功能接口</td> <td></td> <td></td> <td></td> <td>需申请</td></tr> <tr><td>微信发票接口</td> <td></td> <td>有</td> <td></td> <td>有</td></tr> <tr><td>微信JS-SDK-基础接口</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-分享接口</td> <td></td> <td>有</td> <td></td> <td>有</td></tr> <tr><td>微信JS-SDK-图像接口</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-音频接口</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-智能接口（网页语音识别）</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-设备信息</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-地理位置</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-界面操作</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-微信扫一扫</td> <td>有</td> <td>有</td> <td>有</td> <td>有</td></tr> <tr><td>微信JS-SDK-微信小店</td> <td></td> <td></td> <td></td> <td>有</td></tr> <tr><td>微信JS-SDK-微信卡券</td> <td></td> <td>有</td> <td></td> <td>有</td></tr> <tr><td>微信JS-SDK-微信支付</td> <td></td> <td></td> <td></td> <td>有</td></tr></tbody></table></div><h2 id="附录-卡券扩展字段及签名生成算法"><a href="#附录-卡券扩展字段及签名生成算法" class="header-anchor">#</a> 附录 | 卡券扩展字段及签名生成算法</h2> <h4 id="_1-JSSDK使用者请读这里，JSAPI用户可以跳过"><a href="#_1-JSSDK使用者请读这里，JSAPI用户可以跳过" class="header-anchor">#</a> 1. JSSDK使用者请读这里，JSAPI用户可以跳过</h4> <p>卡券签名和JSSDK的签名完全独立，两者的算法和意义完全不同，请不要混淆。JSSDK的签名是使用所有JS接口都需要走的一层鉴权，用以标识调用者的身份，和卡券本身并无关系。其次，卡券的签名考虑到协议的扩展性和简单的防数据擅改，设计了一套独立的签名协议。另外由于历史原因，卡券的JS接口先于JSSDK出现，当时的JSAPI并没有鉴权体系，所以在卡券的签名里也加上了appsecret/api_ticket这些身份信息，希望开发者理解。</p> <h4 id="_2-卡券-api-ticket"><a href="#_2-卡券-api-ticket" class="header-anchor">#</a> 2. 卡券 api_ticket</h4> <p>卡券 api_ticket 是用于调用卡券相关接口的临时票据，有效期为 7200 秒，通过 access_token 来获取。这里要注意与 jsapi_ticket 区分开来。由于获取卡券 api_ticket 的 api 调用次数非常有限，频繁刷新卡券 api_ticket 会导致 api 调用受限，影响自身业务，开发者必须在自己的服务全局缓存卡券 api_ticket 。</p> <p>1.参考以下文档获取access_token（有效期7200秒，开发者必须在自己的服务全局缓存access_token）：../15/54ce45d8d30b6bf6758f68d2e95bc627.html</p> <p>2.用第一步拿到的access_token 采用http GET方式请求获得卡券 api_ticket（有效期7200秒，开发者必须在自己的服务全局缓存卡券 api_ticket）：<a href="https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=ACCESS_TOKEN&type=wx_card" target="_blank">https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=ACCESS_TOKEN&amp;type=wx_card</a></p> <h4 id="_3-卡券扩展字段cardExt说明"><a href="#_3-卡券扩展字段cardExt说明" class="header-anchor">#</a> 3. 卡券扩展字段cardExt说明</h4> <p>cardExt本身是一个JSON字符串，是商户为该张卡券分配的唯一性信息，包含以下字段：</p> <div class="table-wrp"><table><thead><tr><th>字段</th> <th>是否必填</th> <th>是否参与签名</th> <th>说明</th></tr></thead> <tbody><tr><td>code</td> <td>否</td> <td>是</td> <td>指定的卡券code码，只能被领一次。自定义code模式的卡券必须填写，非自定义code和预存code模式的卡券不必填写。详情见： 是否自定义code码</td></tr> <tr><td>openid</td> <td>否</td> <td>是</td> <td>指定领取者的openid，只有该用户能领取。bind_openid字段为true的卡券必须填写，bind_openid字段为false不必填写。</td></tr> <tr><td>timestamp</td> <td>是</td> <td>是</td> <td>时间戳，商户生成从1970年1月1日00:00:00至今的秒数,即当前的时间,且最终需要转换为字符串形式;由商户生成后传入,不同添加请求的时间戳须动态生成，若重复将会导致领取失败！。</td></tr> <tr><td>nonce_str</td> <td>否</td> <td>是</td> <td>随机字符串，由开发者设置传入， 加强安全性（若不填写可能被重放请求） 。随机字符串，不长于32位。推荐使用大小写字母和数字，不同添加请求的nonce须动态生成，若重复将会导致领取失败。</td></tr> <tr><td>fixed_begintimestamp</td> <td>否</td> <td>否</td> <td>卡券在第三方系统的实际领取时间，为东八区时间戳（UTC+8,精确到秒）。当卡券的有效期类型为 DAT E_TYPE_FIX_TERM时专用，标识卡券的实际生效时间，用于解决商户系统内起始时间和领取时间不同步的问题。</td></tr> <tr><td>outer_str</td> <td>否</td> <td>否</td> <td>领取渠道参数，用于标识本次领取的渠道值。</td></tr> <tr><td>signature</td> <td>是</td> <td>-</td> <td>签名，商户将接口列表中的参数按照指定方式进行签名,签名方式使用SHA1,具体签名方案参见下文;由商户按照规范签名后传入。</td></tr></tbody></table></div><p><strong>签名说明</strong></p> <ol><li><p>将 api_ticket、timestamp、card_id、code、openid、nonce_str的value值进行字符串的字典序排序。</p></li> <li><p>将所有参数字符串拼接成一个字符串进行sha1加密，得到signature。</p></li> <li><p>signature中的timestamp，nonce字段和card_ext中的timestamp，nonce_str字段必须保持一致。</p></li> <li><p>code=1434008071，timestamp=1404896688，card_id=pjZ8Yt1XGILfi-FUsewpnnolGgZk， api_ticket=ojZ8YtyVyr30HheH3CM73y7h4jJE ，nonce_str=123 则signature=sha1(12314048966881434008071ojZ8YtyVyr30HheH3CM73y7h4jJEpjZ8Yt1XGILfi-FUsewpnnolGgZk)=f137ab68b7f8112d20ee528ab6074564e2796250。</p></li></ol> <p><strong>强烈建议开发者使用卡券资料包中的签名工具SDK进行签名或使用debug工具进行校验：</strong> <a href="http://mp.weixin.qq.com/debug/cgi-bin/sandbox?t=cardsign" target="_blank">http://mp.weixin.qq.com/debug/cgi-bin/sandbox?t=cardsign</a></p> <h4 id="_4-卡券签名cardSign说明"><a href="#_4-卡券签名cardSign说明" class="header-anchor">#</a> 4. 卡券签名cardSign说明</h4> <p>1.将 api_ticket、appid、location_id、timestamp、nonce_str、card_id、card_type的value值进行字符串的字典序排序。</p> <p>2.将所有参数字符串拼接成一个字符串进行sha1加密，得到cardSign。</p> <h2 id="附录-常见错误及解决方法"><a href="#附录-常见错误及解决方法" class="header-anchor">#</a> 附录 | 常见错误及解决方法</h2> <p>调用config 接口的时候传入参数 <code>debug: true</code> 可以开启 debug 模式，页面会 alert 出错误信息。以下为常见错误及解决方法：</p> <p>1.<code>invalid url domain</code> 当前页面所在域名与使用的 appid 没有绑定，请确认正确填写绑定的域名，仅支持80（http）和443（https）两个端口，因此不需要填写端口号（一个appid可以绑定三个有效域名，见 ]<a href="#2">目录1.1.1</a>）。</p> <p>2.invalid signature签名错误。建议按如下顺序检查：</p> <ul><li>确认签名算法正确，可用<a href="http://mp.weixin.qq.com/debug/cgi-bin/sandbox?t=jsapisign" target="_blank">http://mp.weixin.qq.com/debug/cgi-bin/sandbox?t=jsapisign</a> 页面工具进行校验。</li> <li>确认config中nonceStr（js中驼峰标准大写S）, timestamp与用以签名中的对应noncestr, timestamp一致。</li> <li>确认url是页面完整的url(请在当前页面alert(location.href.split('#')[0])确认)，包括<code>'http(s)://'</code>部分，以及'？'后面的GET参数部分,但不包括'#'hash后面的部分。</li> <li>确认 config 中的 appid 与用来获取 jsapi_ticket 的 appid 一致。</li> <li>确保一定缓存access_token和jsapi_ticket。</li> <li>确保你获取用来签名的url是动态获取的，动态页面可参见实例代码中php的实现方式。如果是html的静态页面在前端通过ajax将url传到后台签名，前端需要用js获取当前页面除去'#'hash部分的链接（可用location.href.split('#')[0]获取,而且需要encodeURIComponent），因为页面一旦分享，微信客户端会在你的链接末尾加入参数，如果不是动态获取当前链接，将导致分享后的页面签名失败。</li></ul> <p>3.<code>the permission value is offline verifying</code> 这个错误是因为 config 没有正确执行，或者是调用的 <code>JSAPI</code> 没有传入 <code>config</code> 的 <code>jsApiList</code> 参数中。建议按如下顺序检查：</p> <ul><li>确认config正确通过。</li> <li>如果是在页面加载好时就调用了JSAPI，则必须写在wx.ready的回调中。</li> <li>确认config的jsApiList参数包含了这个JSAPI。</li></ul> <p>4.permission denied该服务号没有权限使用这个JSAPI，或者是调用的JSAPI没有传入config的jsApiList参数中（部分接口需要认证之后才能使用）。</p> <p>5.function not exist当前客户端版本不支持该接口，请升级到新版体验。</p> <p>6.为什么6.0.1版本config:ok，但是6.0.2版本之后不ok（因为6.0.2版本之前没有做权限验证，所以config都是ok，但这并不意味着你config中的签名是OK的，请在6.0.2检验是否生成正确的签名以保证config在高版本中也ok。）</p> <p>7.在iOS和Android都无法分享（请确认服务号已经认证，只有认证的服务号才具有分享相关接口权限，如果确实已经认证，则要检查监听接口是否在wx.ready回调函数中触发）</p> <p>8.服务上线之后无法获取jsapi_ticket，自己测试时没问题。（因为access_token和jsapi_ticket必须要在自己的服务器缓存，否则上线后会触发频率限制。请确保一定对token和ticket做缓存以减少2次服务器请求，不仅可以避免触发频率限制，还加快你们自己的服务速度。目前为了方便测试提供了1w的获取量，超过阈值后，服务将不再可用，请确保在服务上线前一定全局缓存access_token和jsapi_ticket，两者有效期均为7200秒，否则一旦上线触发频率限制，服务将不再可用）。</p> <p>9.uploadImage怎么传多图（目前只支持一次上传一张，多张图片需等前一张图片上传之后再调用该接口）</p> <p>10.没法对本地选择的图片进行预览（chooseImage接口本身就支持预览，不需要额外支持）</p> <p>11.通过a链接(例如先通过微信授权登录)跳转到b链接，invalid signature签名失败（后台生成签名的链接为使用jssdk的当前链接，也就是跳转后的b链接，请不要用微信登录的授权链接进行签名计算，后台签名的url一定是使用jssdk的当前页面的完整url除去'#'部分）</p> <p>12.出现config:fail错误（这是由于传入的config参数不全导致，请确保传入正确的appId、timestamp、nonceStr、signature和需要使用的jsApiList）</p> <p>13.如何把jsapi上传到微信的多媒体资源下载到自己的服务器（请参见文档中uploadVoice和uploadImage接口的备注说明）</p> <p>14.Android通过jssdk上传到微信服务器，第三方再从微信下载到自己的服务器，会出现杂音（微信团队已经修复此问题，目前后台已优化上线）</p> <p>15.绑定父级域名，是否其子域名也是可用的（是的，合法的子域名在绑定父域名之后是完全支持的）</p> <p>16.在iOS微信6.1版本中，分享的图片外链不显示，只能显示服务号页面内链的图片或者微信服务器的图片，已在6.2中修复</p> <p>17.是否需要对低版本自己做兼容（jssdk都是兼容低版本的，不需要第三方自己额外做更多工作，但有的接口是6.0.2新引入的，只有新版才可调用）</p> <p>18.该服务号支付签名无效，无法发起该笔交易（请确保你使用的jweixin.js是官方线上版本，不仅可以减少用户流量，还有可能对某些bug进行修复，拷贝到第三方服务器中使用，官方将不对其出现的任何问题提供保障，具体支付签名算法可参考 JSSDK微信支付一栏）</p> <p>19.目前Android微信客户端不支持pushState的H5新特性，所以使用pushState来实现web app的页面会导致签名失败，此问题已在Android6.2中修复</p> <p>20.uploadImage在chooseImage的回调中有时候Android会不执行，Android6.2会解决此问题，若需支持低版本可以把调用uploadImage放在setTimeout中延迟100ms解决</p> <p>21.require subscribe错误说明你没有订阅该测试号，该错误仅测试号会出现</p> <p>22.getLocation返回的坐标在openLocation有偏差，因为getLocation返回的是gps坐标，openLocation打开的腾讯地图为火星坐标，需要第三方自己做转换，6.2版本开始已经支持直接获取火星坐标</p> <p>23.查看服务号（未添加）: &quot;menuItem:addContact&quot;不显示，目前仅有从服务号传播出去的链接才能显示，来源必须是服务号</p> <p>24.ICP备案数据同步有一天延迟，所以请在第二日绑定</p> <h2 id="附录-DEMO页面和示例代码"><a href="#附录-DEMO页面和示例代码" class="header-anchor">#</a> 附录 | DEMO页面和示例代码</h2> <p><strong>DEMO页面：</strong></p> <p><a href="https://www.weixinsxy.com/jssdk/" target="_blank">https://www.weixinsxy.com/jssdk/</a></p> <img src="https://mmbiz.qpic.cn/mmbiz/PiajxSqBRaEIQxibpLbyuSK39dMUJfWKTT3w5O5mich0nbKnpPnpl0QzuWuncBtibiaZQlmH1MGf3HoicWNIeaV4dXUg/0?wx_fmt=png" alt data-width="250" data-ratio="0.988"> <p><strong>示例代码：</strong></p> <p><a href="https://www.weixinsxy.com/jssdk/sample.zip" target="_blank">https://www.weixinsxy.com/jssdk/sample.zip</a></p> <p>备注：链接中包含php、java、nodejs以及python的示例代码供第三方参考，第三方切记要对获取的accesstoken以及jsapi_ticket进行缓存以确保不会触发频率限制。</p> <h2 id="附录-问题反馈"><a href="#附录-问题反馈" class="header-anchor">#</a> 附录 | 问题反馈</h2> <p><a href="https://developers.weixin.qq.com/community/minihome/question/1277775808983138305" target="_blank">微信JS-SDK反馈</a></p> <p>用简明的语言描述问题所在，并交代清楚遇到该问题的场景，可附上截屏图片，微信团队会尽快处理你的反馈。</p></div> <div class="fixed-translate" style="display:none;"><span>The translations are provided by WeChat Translation and are for reference only. In case of any inconsistency and discrepancy between the Chinese version and the English version, the Chinese version shall prevail.Incorrect translation. <a href="javascript:;" class="fixed-translate-btn">Tap to report.</a></span></div></div> <!----> <div class="related"><!----> <!----></div> <footer class="page-edit"><!----></footer>  <footer class="footer"><ul class="footer-links"><li class="footer-link"><a href="http://www.tencent.com/zh-cn/index.shtml" target="_blank">关于腾讯</a></li> <li class="footer-link"><a href="https://mp.weixin.qq.com/debug/wxadoc/introduction/index.html?t=1484641676" target="_blank">文档中心</a></li> <li class="footer-link"><a href="https://kf.qq.com/faq/17030722muuu170307MFBny2.html" target="_blank">辟谣中心</a></li> <li class="footer-link"><a href="http://kf.qq.com/faq/120911VrYVrA1509086vyumm.html" target="_blank">客服中心</a></li></ul> <p class="copyright">Copyright © 2012-<span>2026</span> Tencent. All Rights Reserved.</p></footer></div></main></div> <!----></div></div> <div id="popoverWrapId" class="pop-links__wrp popover_hide"><ul class="pop-links__list"><li class="pop-links__item"><button class="pop-link">复制</button></li> <li class="pop-links__item"><button class="pop-link">问题反馈</button></li></ul></div> <div class="fixed-btns"><a href="javascript:;" class="fixed-btn fixed-btn__feedback"><div class="fixed-btn__inner"><span class="fixed-btn__icon"></span> <span class="fixed-btn__text">反馈</span></div></a> <a href="javascript:;" class="fixed-btn fixed-btn__top" style="display:none;"><div class="fixed-btn__inner"><span class="fixed-btn__icon"></span></div></a></div></div></div></div>
+    <script src="https://res.wx.qq.com/wxdoc/dist/assets/js/app.778927a9.js" defer></script><script src="https://res.wx.qq.com/wxdoc/dist/assets/js/3627.c4c9be26.js" defer></script>
+  </body>
+</html>
