@@ -119,7 +119,6 @@ async function persistNormalizedCardCover(input) {
       width: MAX_CARD_COVER_DIMENSION,
       height: MAX_CARD_COVER_DIMENSION,
       fit: 'inside',
-      withoutEnlargement: true,
     })
     .jpeg({ quality, mozjpeg: true })
     .toBuffer();
