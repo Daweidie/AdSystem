@@ -215,8 +215,18 @@ function renderCardHtml(card, req, redirectUrl, options = {}) {
   <script type="application/ld+json">${jsonLd}</script>`;
   } else {
     const savedCoverUrl = card.card_cover_url || card.video_cover_url;
-    const rawCoverUrl = canonicalCardCoverPath(savedCoverUrl) || savedCoverUrl;
-    coverUrl = toPublicHttpsUrl(rawCoverUrl, req, options.baseUrl || '');
+    const localCoverPath = canonicalCardCoverPath(savedCoverUrl);
+    const rawCoverUrl = localCoverPath || savedCoverUrl;
+    // Uploaded covers are served by the application, not by the short-link
+    // alias.  Using options.baseUrl here can produce URLs such as
+    // https://i6q.cn/card-covers/... where the alias redirects to its home
+    // page instead of returning the image, so WeCom cannot render the cover.
+    // Prefer the configured canonical application origin for local covers;
+    // keep external cover URLs relative to the caller's selected base URL.
+    const coverBaseUrl = localCoverPath
+      ? (configuredBaseUrl() || options.baseUrl || '')
+      : (options.baseUrl || '');
+    coverUrl = toPublicHttpsUrl(rawCoverUrl, req, coverBaseUrl);
     const dimensions = readCardCoverDimensions(rawCoverUrl) || { width: 600, height: 600 };
     structuredMetadata = `  <meta property="og:image" content="${escapeHtml(coverUrl)}" />
   <meta property="og:image:secure_url" content="${escapeHtml(coverUrl)}" />

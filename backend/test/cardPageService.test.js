@@ -47,6 +47,30 @@ test('card pages keep the final local cover URL in og:image', () => {
   assert.doesNotMatch(html, /wechat-share-default\.png/);
 });
 
+test('card pages use the configured application origin for local covers', () => {
+  const previous = process.env.PUBLIC_CARD_BASE_URL;
+  process.env.PUBLIC_CARD_BASE_URL = 'https://vod.zzqxkj055.eu.cc';
+  try {
+    const filename = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.jpg';
+    const html = cardPageService.renderCardHtml({
+      card_title: '正式域名封面',
+      card_cover_url: `/card-covers/${filename}`,
+    }, {
+      protocol: 'https',
+      originalUrl: '/hwi6Z',
+      get: () => 'b.i6q.cn',
+    }, '/play?fileId=cover', { baseUrl: 'https://i6q.cn' });
+
+    assert.match(html, new RegExp(
+      `property="og:image" content="https://vod\\.zzqxkj055\\.eu\\.cc/card-covers/${filename}"`,
+    ));
+    assert.doesNotMatch(html, /https:\/\/i6q\.cn\/card-covers/);
+  } finally {
+    if (previous === undefined) delete process.env.PUBLIC_CARD_BASE_URL;
+    else process.env.PUBLIC_CARD_BASE_URL = previous;
+  }
+});
+
 test('card pages migrate legacy API-shaped cover URLs to the top-level static path', () => {
   const filename = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.jpg';
   const html = cardPageService.renderCardHtml({
