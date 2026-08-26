@@ -230,6 +230,7 @@ function renderCardHtml(card, req, redirectUrl, options = {}) {
     const dimensions = readCardCoverDimensions(rawCoverUrl) || { width: 600, height: 600 };
     structuredMetadata = `  <meta property="og:image" content="${escapeHtml(coverUrl)}" />
   <meta property="og:image:secure_url" content="${escapeHtml(coverUrl)}" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="${dimensions.width}" />
   <meta property="og:image:height" content="${dimensions.height}" />
   <meta name="image" content="${escapeHtml(coverUrl)}" />

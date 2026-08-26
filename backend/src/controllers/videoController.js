@@ -687,6 +687,7 @@ async function renderPlayPage(video, req) {
     `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`,
     `<meta property="og:image" content="${escapeHtml(coverUrl)}" />`,
     `<meta property="og:image:secure_url" content="${escapeHtml(coverUrl)}" />`,
+    '<meta property="og:image:type" content="image/jpeg" />',
     `<meta property="og:image:width" content="${coverDimensions.width}" />`,
     `<meta property="og:image:height" content="${coverDimensions.height}" />`,
     `<meta itemprop="name" content="${escapeHtml(title)}" />`,
