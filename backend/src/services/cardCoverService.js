@@ -10,6 +10,7 @@ const CARD_COVER_PUBLIC_PREFIX = '/card-covers/';
 const LEGACY_CARD_COVER_PUBLIC_PREFIX = '/api/media/share-cards/';
 const MAX_CARD_COVER_BYTES = 5 * 1024 * 1024;
 const MAX_CARD_COVER_DIMENSION = 600;
+const CARD_COVER_HEIGHT = 382;
 const TARGET_CARD_COVER_QUALITY = 82;
 const MAX_CARD_COVER_OUTPUT_BYTES = 300 * 1024;
 const REMOTE_CARD_COVER_TIMEOUT_MS = 10000;
@@ -117,8 +118,8 @@ async function persistNormalizedCardCover(input) {
     .rotate()
     .resize({
       width: MAX_CARD_COVER_DIMENSION,
-      height: MAX_CARD_COVER_DIMENSION,
-      fit: 'inside',
+      height: CARD_COVER_HEIGHT,
+      fit: 'cover',
     })
     .jpeg({ quality, mozjpeg: true })
     .toBuffer();
