@@ -305,7 +305,12 @@ async function createShortLink(longUrl, platform = 'auto', options = {}) {
 
   // 自建卡片仍使用统一公共入口，确保域名已部署到卡片/播放路由；
   // Suolink 不受此限制，使用完整的供应商域名池进行轮换。
-  if (options.preferredSelfOrigin && options.requirePreferredSelfOrigin) {
+  // Explicit self-hosted generation is a domain-pool operation: every enabled
+  // self domain is eligible and usage balancing rotates across the pool. The
+  // preferred origin constraint is only needed for automatic fallback, where
+  // the public card origin must remain the configured/verified one.
+  if (options.preferredSelfOrigin && options.requirePreferredSelfOrigin
+    && requestedPlatform !== 'self') {
     let preferredOrigin = '';
     try {
       preferredOrigin = new URL(options.preferredSelfOrigin).origin.toLowerCase();

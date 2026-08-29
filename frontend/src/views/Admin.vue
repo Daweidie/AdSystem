@@ -526,9 +526,9 @@ async function generateLink(material, platform = 'self', selectedMode) {
       body: JSON.stringify({
         videoId: material.id,
         wechatCardMode,
-        // 万能短链接优先使用 Suolink；供应商域名未备案或未生效时，
-        // 自动降级为当前已验证的自建 /s 短链，避免管理员只能收到 502。
-        ...(isSuolink ? { platform: 'auto', allowFallback: true } : {}),
+        // “生成万象链接”必须保持 Suolink 类型；供应商域名未备案或
+        // 未生效时直接展示明确错误，不能静默生成自建 /s 链接造成误判。
+        ...(isSuolink ? { platform: 'suolink', allowFallback: false } : {}),
       }),
     });
     const copied = await copyText(result.shortUrl || result.short_url || '');

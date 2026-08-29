@@ -411,7 +411,11 @@ async function generateShortLink(req, res, next) {
           ? null
           : await buildCardCoverUrl(videoRows[0].cover_url, req, cardBaseUrl),
         wechatCardMode,
-        allowFallback: req.body?.allowFallback !== false,
+        // 显式选择 Suolink 时禁止跨平台降级，否则管理端“生成万象链接”
+        // 失败后会悄悄得到自建 /s 链接，用户无法辨识实际链路类型。
+        allowFallback: req.body?.platform === 'suolink'
+          ? false
+          : req.body?.allowFallback !== false,
         preferredSelfOrigin: new URL(cardBaseUrl).origin,
         requirePreferredSelfOrigin: true,
         createdBy: req.auth.id,
