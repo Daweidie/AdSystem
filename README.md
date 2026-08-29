@@ -129,6 +129,12 @@ Playwright 测试默认使用 Windows Edge，可通过 `PLAYWRIGHT_EDGE_PATH` �
 `TRUST_PROXY_HOPS`。Suolink 配置同时供新建和原有链接使用。播放器签名密钥留空时，后端会调用
 腾讯云 `DescribeDefaultDistributionConfig` 获取正确的播放密钥并仅在内存中缓存。
 
+若 HTML 源站位于香港或海外，建议另配 `PUBLIC_CARD_COVER_BASE_URL` 为已备案的腾讯云
+COS/CDN HTTPS 根域名。卡片封面和默认图的 `og:image` 会使用该域名，避免企业微信国内抓取器
+跨境访问源站图片；该域名必须能匿名返回 `200`、正确的 `Content-Type`（`image/jpeg` 或
+`image/png`）及不超过 1MB 的图片。开发环境中管理端会把 `/card-covers/*` 和默认图解析到
+后端 API Origin，避免误请求 Vite 的 5173 SPA 页面。
+
 开发环境由 Vite 中间件在返回 `/play` 前调用访问门禁；生产环境必须使用
 `nginx/demo18.conf.template` 中的精确 `/play`、`/s/` 与 `/card/` 代理；否则卡片入口可能被
 Vue SPA 接管，微信爬虫无法取得服务端卡片元数据。

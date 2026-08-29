@@ -2,7 +2,8 @@ const pool = require('../config/db');
 const axios = require('axios');
 const suolinkService = require('../services/suolinkService');
 const { decryptSecret, encryptSecret, maskSecret } = require('../services/secretConfigService');
-const { getPublicCardDomainDiagnostics } = require('../services/runtimeConfigService');
+const { getPublicCardDomainDiagnostics, persistPublicBaseUrls } = require('../services/runtimeConfigService');
+const { getCertificateStatus, installCertificate } = require('../services/certificateService');
 
 function createHttpError(status, message, code) {
   const error = new Error(message);
@@ -366,6 +367,11 @@ async function setPrimary(connection, domainId, platform) {
      ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)`,
     [platform],
   );
+  if (platform === 'self') {
+    const [[domain]] = await connection.execute('SELECT domain FROM domains WHERE id = ? LIMIT 1', [domainId]);
+    if (!domain) throw createHttpError(404, '域名不存在', 'DOMAIN_NOT_FOUND');
+    persistPublicBaseUrls(domain.domain);
+  }
 }
 
 async function switchDomain(req, res, next) {
@@ -660,10 +666,45 @@ async function getCardDomainConfig(req, res, next) {
   }
 }
 
+async function getCertificateConfig(req, res, next) {
+  try {
+    const domainId = normalizeDomainId(req.params.id);
+    const [[domain]] = await pool.execute(
+      'SELECT id, domain, type, platform FROM domains WHERE id = ? LIMIT 1',
+      [domainId],
+    );
+    if (!domain) throw createHttpError(404, '域名不存在', 'DOMAIN_NOT_FOUND');
+    if (domain.type !== 'self_hosted' || domain.platform !== 'self') {
+      throw createHttpError(409, '仅自建域名支持上传 SSL 证书', 'CERTIFICATE_DOMAIN_TYPE_INVALID');
+    }
+    return res.json({ success: true, data: getCertificateStatus(domain.domain) });
+  } catch (error) { return next(error); }
+}
+
+async function uploadCertificate(req, res, next) {
+  try {
+    const domainId = normalizeDomainId(req.params.id);
+    const [[domain]] = await pool.execute(
+      'SELECT id, domain, type, platform FROM domains WHERE id = ? LIMIT 1',
+      [domainId],
+    );
+    if (!domain) throw createHttpError(404, '域名不存在', 'DOMAIN_NOT_FOUND');
+    if (domain.type !== 'self_hosted' || domain.platform !== 'self') {
+      throw createHttpError(409, '仅自建域名支持上传 SSL 证书', 'CERTIFICATE_DOMAIN_TYPE_INVALID');
+    }
+    const certificate = req.files?.certificate?.[0];
+    const privateKey = req.files?.privateKey?.[0];
+    const result = installCertificate(domain.domain, certificate?.buffer, privateKey?.buffer);
+    return res.json({ success: true, data: result, message: 'SSL 证书已验证、启用并完成 Nginx 平滑重载' });
+  } catch (error) { return next(error); }
+}
+
 module.exports = {
   switchDomain,
   listDomains,
   getCardDomainConfig,
+  getCertificateConfig,
+  uploadCertificate,
   getSuolinkConfig,
   saveSuolinkConfig,
   getDeliveryReadiness: getOgDeliveryReadiness,

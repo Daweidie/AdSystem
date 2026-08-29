@@ -21,6 +21,7 @@ test('card pages render escaped metadata and an encoded same-origin play target'
   assert.match(html, /property="og:description"/);
   assert.match(html, new RegExp(`property="og:url" content="http://127\\.0\\.0\\.1:3000/card/${cardToken}"`));
   assert.match(html, /property="og:image" content="http:\/\/127\.0\.0\.1:3000\/wechat-share-default\.png"/);
+  assert.match(html, /property="og:image:type" content="image\/png"/);
   assert.match(html, /name="twitter:title"/);
   assert.match(html, /name="twitter:description"/);
   assert.match(html, /name="twitter:image"/);
@@ -29,6 +30,20 @@ test('card pages render escaped metadata and an encoded same-origin play target'
   const token = html.match(/data-play-token="([A-Za-z0-9_-]+)"/)?.[1];
   assert.equal(Buffer.from(token, 'base64url').toString('utf8'), '/play?fileId=demo&shortLinkId=9');
   assert.equal(html.includes('<script>alert(1)</script>'), false);
+});
+
+test('card pages declare JPEG only for JPEG covers', () => {
+  const html = cardPageService.renderCardHtml({
+    card_title: 'JPEG 封面',
+    card_cover_url: 'https://cdn.example.com/covers/cover.jpg?v=1',
+  }, {
+    protocol: 'https',
+    originalUrl: '/card/jpeg-token-12345678901234567890',
+    get: () => 'cards.example.com',
+  }, '/play?fileId=jpeg');
+
+  assert.match(html, /property="og:image:type" content="image\/jpeg"/);
+  assert.doesNotMatch(html, /content="image\/png"/);
 });
 
 test('card pages keep the final local cover URL in og:image', () => {
@@ -68,6 +83,33 @@ test('card pages use the configured application origin for local covers', () => 
   } finally {
     if (previous === undefined) delete process.env.PUBLIC_CARD_BASE_URL;
     else process.env.PUBLIC_CARD_BASE_URL = previous;
+  }
+});
+
+test('card pages use a dedicated public cover origin when configured', () => {
+  const previousCardBase = process.env.PUBLIC_CARD_BASE_URL;
+  const previousCoverBase = process.env.PUBLIC_CARD_COVER_BASE_URL;
+  process.env.PUBLIC_CARD_BASE_URL = 'https://h5.example.hk';
+  process.env.PUBLIC_CARD_COVER_BASE_URL = 'https://img.example.cn';
+  try {
+    const filename = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.jpg';
+    const html = cardPageService.renderCardHtml({
+      card_title: '国内封面域名',
+      card_cover_url: `/card-covers/${filename}`,
+    }, {
+      protocol: 'https',
+      originalUrl: '/s/Cover01',
+      get: () => 'h5.example.hk',
+    }, '/play?fileId=cover', { baseUrl: 'https://h5.example.hk' });
+
+    assert.match(html, new RegExp(
+      `property="og:image" content="https://img\\.example\\.cn/card-covers/${filename}"`,
+    ));
+  } finally {
+    if (previousCardBase === undefined) delete process.env.PUBLIC_CARD_BASE_URL;
+    else process.env.PUBLIC_CARD_BASE_URL = previousCardBase;
+    if (previousCoverBase === undefined) delete process.env.PUBLIC_CARD_COVER_BASE_URL;
+    else process.env.PUBLIC_CARD_COVER_BASE_URL = previousCoverBase;
   }
 });
 

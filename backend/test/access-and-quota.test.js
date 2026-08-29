@@ -26,8 +26,8 @@ test('video retention defaults to three days and accepts a positive override', (
   }
 });
 
-test('upload signatures are only issued for videos at or below 800MB', async () => {
-  assert.equal(videoController.MAX_VIDEO_UPLOAD_SIZE_BYTES, 800 * 1024 * 1024);
+test('upload signatures are only issued for videos at or below 600MB', async () => {
+  assert.equal(videoController.MAX_VIDEO_UPLOAD_SIZE_BYTES, 600 * 1024 * 1024);
 
   let oversizeError;
   await videoController.getUploadSignature(

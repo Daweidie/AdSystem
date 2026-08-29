@@ -17,6 +17,18 @@ function configuredBaseUrl() {
     .trim().replace(/\/+$/, '');
 }
 
+// Card covers may live on a mainland COS/CDN origin while the HTML and API
+// remain on a Hong Kong/overseas origin.  Keep this setting independent from
+// PUBLIC_CARD_BASE_URL so a crawler never has to cross the HTML origin just
+// to fetch the image.
+function configuredCardCoverBaseUrl() {
+  return String(
+    process.env.PUBLIC_CARD_COVER_BASE_URL
+      || process.env.CARD_COVER_PUBLIC_BASE_URL
+      || '',
+  ).trim().replace(/\/+$/, '');
+}
+
 function requestBaseUrl(req) {
   try {
     const protocol = ['http', 'https'].includes(req?.protocol) ? req.protocol : 'https';
@@ -82,12 +94,23 @@ function isPrivateHostname(hostname) {
 }
 
 function toPublicHttpsUrl(value, req, baseUrl = '') {
-  const raw = String(value || '').trim();
-  const fallback = new URL('/wechat-share-default.png', `${publicBaseUrl(req, baseUrl)}/`).toString();
+  const input = String(value || '').trim();
+  // Migrate the legacy API-shaped path before applying the image origin so
+  // old database rows also resolve to the CDN's canonical /card-covers path.
+  const raw = canonicalCardCoverPath(input) || input;
+  // Root-relative managed assets are served from the configured image origin
+  // when present (for example a mainland COS CDN). Explicit/HTML origins are
+  // still used when no dedicated image origin is configured.
+  const imageBaseUrl = configuredCardCoverBaseUrl();
+  const effectiveBaseUrl = imageBaseUrl && !/^https?:\/\//iu.test(raw)
+    ? imageBaseUrl
+    : baseUrl;
+  const fallbackBaseUrl = imageBaseUrl || effectiveBaseUrl;
+  const fallback = new URL('/wechat-share-default.png', `${publicBaseUrl(req, fallbackBaseUrl)}/`).toString();
   if (!raw) return fallback;
 
   try {
-    const url = new URL(raw, `${publicBaseUrl(req, baseUrl)}/`);
+    const url = new URL(raw, `${publicBaseUrl(req, effectiveBaseUrl)}/`);
     if (
       url.protocol !== 'https:'
       || url.username
@@ -98,6 +121,29 @@ function toPublicHttpsUrl(value, req, baseUrl = '') {
   } catch {
     return fallback;
   }
+}
+
+/**
+ * Return the MIME type that matches a public cover URL when it is knowable
+ * without fetching the remote object.  Uploaded and cached covers are always
+ * JPEGs; the built-in fallback is a PNG.  If a remote URL has no recognised
+ * extension we omit og:image:type instead of declaring the wrong media type
+ * (WeCom may reject the image when the declaration and response disagree).
+ */
+function inferImageMimeType(value) {
+  let pathname = String(value || '').trim();
+  try {
+    pathname = new URL(pathname, 'https://placeholder.invalid/').pathname;
+  } catch {
+    // Keep the raw value and try its extension below.
+  }
+  const extension = pathname.match(/\.([a-z0-9]+)$/iu)?.[1]?.toLowerCase();
+  return {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+  }[extension] || '';
 }
 
 function escapeHtml(value) {
@@ -217,20 +263,21 @@ function renderCardHtml(card, req, redirectUrl, options = {}) {
     const savedCoverUrl = card.card_cover_url || card.video_cover_url;
     const localCoverPath = canonicalCardCoverPath(savedCoverUrl);
     const rawCoverUrl = localCoverPath || savedCoverUrl;
-    // Uploaded covers are served by the application, not by the short-link
-    // alias.  Using options.baseUrl here can produce URLs such as
-    // https://i6q.cn/card-covers/... where the alias redirects to its home
-    // page instead of returning the image, so WeCom cannot render the cover.
-    // Prefer the configured canonical application origin for local covers;
-    // keep external cover URLs relative to the caller's selected base URL.
+    // Uploaded covers are served by the application (or the dedicated image
+    // CDN), not by the short-link alias. Using options.baseUrl here can
+    // produce URLs such as https://i6q.cn/card-covers/... where the alias
+    // redirects to its home page instead of returning image bytes.
+    // Prefer the dedicated image origin, then the canonical application
+    // origin; keep external cover URLs relative to the caller's base URL.
     const coverBaseUrl = localCoverPath
-      ? (configuredBaseUrl() || options.baseUrl || '')
+      ? (configuredCardCoverBaseUrl() || configuredBaseUrl() || options.baseUrl || '')
       : (options.baseUrl || '');
     coverUrl = toPublicHttpsUrl(rawCoverUrl, req, coverBaseUrl);
     const dimensions = readCardCoverDimensions(rawCoverUrl) || { width: 600, height: 600 };
+    const imageMimeType = inferImageMimeType(coverUrl);
     structuredMetadata = `  <meta property="og:image" content="${escapeHtml(coverUrl)}" />
   <meta property="og:image:secure_url" content="${escapeHtml(coverUrl)}" />
-  <meta property="og:image:type" content="image/jpeg" />
+${imageMimeType ? `  <meta property="og:image:type" content="${imageMimeType}" />\n` : ''}
   <meta property="og:image:width" content="${dimensions.width}" />
   <meta property="og:image:height" content="${dimensions.height}" />
   <meta name="image" content="${escapeHtml(coverUrl)}" />
@@ -277,6 +324,8 @@ module.exports = {
   encodePlayTarget,
   renderAutoOpenBody,
   toPublicHttpsUrl,
+  configuredCardCoverBaseUrl,
+  inferImageMimeType,
   isPrivateHostname,
   escapeHtml,
   normalizeWechatCardMode,

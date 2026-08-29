@@ -13,6 +13,7 @@ const {
   buildCardUrl,
   renderCardHtml,
   toPublicHttpsUrl,
+  configuredCardCoverBaseUrl,
   normalizeWechatCardMode,
   collapseWhitespace,
 } = require('../services/cardPageService');
@@ -179,6 +180,21 @@ function buildSelfPlayPath(fileId, shortLinkId) {
   return `/play?${query.toString()}`;
 }
 
+// 微信用户打开卡片时直接导航到播放器，避免 WebView 先加载卡片 HTML、
+// 再执行一段 JS 跳转。分享/抓取请求通常没有 MicroMessenger 标识，仍返回
+// 带 OG 元数据的卡片页，避免影响卡片预览。
+function isWechatWebView(req) {
+  const userAgent = String(req.get('user-agent') || '');
+  // Mobile in-app browsers are not limited to WeChat.  Several Android
+  // clients (including Enterprise WeChat and hybrid WebViews) expose only a
+  // reduced user-agent and may not execute the inline redirect script in the
+  // card HTML.  Returning a real HTTP redirect avoids the intermittent blank
+  // page/"open"-again behaviour while keeping crawler previews untouched.
+  if (/wechatdevtools/i.test(userAgent)) return false;
+  return /MicroMessenger|wxwork|WeCom/i.test(userAgent)
+    || /Android/i.test(userAgent) && /(?:;\s*wv\)|\bwv\b|;\s* wv)/i.test(userAgent);
+}
+
 function renderSelfShortLinkCardPage(target, req) {
   const playPath = buildSelfPlayPath(target.fileId, target.shortLinkId);
   return renderCardHtml({
@@ -243,6 +259,20 @@ async function serveCardPage(req, res, next) {
     }
 
     const playPath = buildSelfPlayPath(card.file_id, card.short_link_id);
+    if (isWechatWebView(req)) {
+      // 微信部分 WebView 对相对 Location 的 302 处理不稳定；使用完整
+      // HTTPS 地址可避免首次点击停在空白错误页，刷新后才恢复的现象。
+      const playUrl = new URL(
+        playPath,
+        `${req.protocol === 'https' ? 'https' : 'http'}://${req.get('host')}`,
+      ).toString();
+      return res
+        .status(302)
+        .set('Location', playUrl)
+        .set('Cache-Control', 'no-store')
+        .set('Vary', 'User-Agent')
+        .end();
+    }
     const html = renderCardHtml(await prepareCardTarget(card), req, playPath, {
       baseUrl: card.domain,
     });
@@ -809,7 +839,11 @@ async function toggleShortLink(req, res, next) {
           targetUrl: row.long_url,
           ogTitle: row.card_title || row.video_title || '视频播放',
           ogDescription: row.card_description || row.video_description || '点击查看视频素材',
-          ogImage: toPublicHttpsUrl(row.card_cover_url || row.video_cover_url, req),
+          ogImage: toPublicHttpsUrl(
+            row.card_cover_url || row.video_cover_url,
+            req,
+            configuredCardCoverBaseUrl(),
+          ),
           ogUrl: row.short_url,
           expiresAt: row.expires_at,
         });
@@ -881,6 +915,24 @@ async function serveSelfShortLinkCard(req, res, next) {
         .status(404)
         .set('Content-Type', 'text/html; charset=UTF-8')
         .send(renderPublicShortLinkError(404));
+    }
+
+    // Self-hosted short links use the same card renderer as provider links,
+    // but historically always returned HTML here.  In embedded mobile
+    // browsers that leaves users on the cover page when inline scripts are
+    // blocked or delayed.  Match /card/:token and issue an HTTP redirect.
+    if (isWechatWebView(req)) {
+      const playPath = buildSelfPlayPath(target.fileId, target.shortLinkId);
+      const playUrl = new URL(
+        playPath,
+        `${req.protocol === 'https' ? 'https' : 'http'}://${req.get('host')}`,
+      ).toString();
+      return res
+        .status(302)
+        .set('Location', playUrl)
+        .set('Cache-Control', 'no-store')
+        .set('Vary', 'User-Agent')
+        .end();
     }
 
     return res

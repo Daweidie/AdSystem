@@ -21,6 +21,8 @@ server {
     location = /play {
         proxy_pass http://127.0.0.1:__BACKEND_PORT__/play;
         proxy_http_version 1.1;
+        proxy_buffering off;
+        add_header Cache-Control "no-store" always;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -28,6 +30,18 @@ server {
         proxy_connect_timeout 10s;
         proxy_read_timeout 60s;
         proxy_intercept_errors off;
+    }
+
+    # Never fall back to index.html for a stale/missing hashed asset. Returning
+    # HTML with a 200 status makes WeChat silently render the page unstyled.
+    location ~* "^/assets/[^/]+\\.(?:css|js)$" {
+        try_files $uri =404;
+        max_ranges 0;
+        gzip on;
+        gzip_vary on;
+        gzip_types text/css application/javascript;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
     }
 
     # 微信爬虫必须直接拿到后端生成的完整卡片 HTML，不能落到 Vue SPA。

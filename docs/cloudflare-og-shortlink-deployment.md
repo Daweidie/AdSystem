@@ -61,7 +61,8 @@ ALLOWED_CORS_ORIGINS = "https://vod.zzqixiangkeji.cn"
 ALLOWED_TARGET_ORIGINS = "https://vod.zzqixiangkeji.cn"
 DEFAULT_OG_TITLE = "视频播放"
 DEFAULT_OG_DESCRIPTION = "点击查看视频素材"
-DEFAULT_OG_IMAGE = "https://vod.zzqixiangkeji.cn/wechat-share-default.png"
+# 与 demo18 的 PUBLIC_CARD_COVER_BASE_URL 保持一致，必须能匿名返回真实 PNG。
+DEFAULT_OG_IMAGE = "https://img.vod.zzqixiangkeji.cn/wechat-share-default.png"
 DEMO18_SYNC_URL = "https://vod.zzqixiangkeji.cn"
 
 [[routes]]
@@ -112,6 +113,8 @@ npx wrangler secret put DEMO18_SYNC_API_KEY
 
 ```dotenv
 PUBLIC_CARD_BASE_URL=https://vod.zzqixiangkeji.cn
+# 国内企微抓取使用已备案 COS/CDN 封面域名；对象路径需与 /card-covers/* 对齐。
+PUBLIC_CARD_COVER_BASE_URL=https://img.vod.zzqixiangkeji.cn
 PUBLIC_PLAY_BASE_URL=https://vod.zzqixiangkeji.cn
 
 CLOUDFLARE_SHORTLINK_ENABLED=true

@@ -11,6 +11,8 @@ const {
   createCardToken,
   buildCardUrl,
   toPublicHttpsUrl,
+  configuredCardCoverBaseUrl,
+  inferImageMimeType,
 } = require('../services/cardPageService');
 const {
   cacheRemoteCardCover,
@@ -20,7 +22,7 @@ const {
 } = require('../services/cardCoverService');
 
 const DEFAULT_RETENTION_DAYS = 3;
-const MAX_VIDEO_UPLOAD_SIZE_BYTES = 800 * 1024 * 1024;
+const MAX_VIDEO_UPLOAD_SIZE_BYTES = 600 * 1024 * 1024;
 
 function getRetentionDays() {
   const parsed = Number.parseInt(process.env.VIDEO_RETENTION_DAYS || '', 10);
@@ -236,7 +238,7 @@ async function getUploadSignature(req, res, next) {
       throw createHttpError(400, '视频文件大小无效，请重新选择文件', 'VIDEO_FILE_SIZE_INVALID');
     }
     if (fileSize > MAX_VIDEO_UPLOAD_SIZE_BYTES) {
-      throw createHttpError(413, '视频文件不能超过 800MB', 'VIDEO_FILE_TOO_LARGE');
+      throw createHttpError(413, '视频文件不能超过 600MB', 'VIDEO_FILE_TOO_LARGE');
     }
 
     const signature = await vodService.getUploadSignature();
@@ -397,7 +399,11 @@ async function completeUpload(req, res, next) {
           cardToken,
           cardTitle: rows[0].title,
           cardDescription: rows[0].description,
-          cardCoverUrl: toPublicHttpsUrl(rows[0].cover_url, req, cardBaseUrl),
+          cardCoverUrl: toPublicHttpsUrl(
+            rows[0].cover_url,
+            req,
+            configuredCardCoverBaseUrl() || cardBaseUrl,
+          ),
           preferredSelfOrigin: new URL(cardBaseUrl).origin,
           requirePreferredSelfOrigin: true,
           createdBy: req.auth.id,
@@ -673,6 +679,7 @@ async function renderPlayPage(video, req) {
     coverPath = externalFallback;
   }
   const coverUrl = toPublicHttpsUrl(coverPath, req);
+  const imageMimeType = inferImageMimeType(coverUrl);
   const coverDimensions = cachedCover?.dimensions
     || readCardCoverDimensions(coverPath)
     || { width: 600, height: 600 };
@@ -687,7 +694,9 @@ async function renderPlayPage(video, req) {
     `<meta property="og:url" content="${escapeHtml(pageUrl)}" />`,
     `<meta property="og:image" content="${escapeHtml(coverUrl)}" />`,
     `<meta property="og:image:secure_url" content="${escapeHtml(coverUrl)}" />`,
-    '<meta property="og:image:type" content="image/jpeg" />',
+    imageMimeType
+      ? `<meta property="og:image:type" content="${imageMimeType}" />`
+      : '',
     `<meta property="og:image:width" content="${coverDimensions.width}" />`,
     `<meta property="og:image:height" content="${coverDimensions.height}" />`,
     `<meta itemprop="name" content="${escapeHtml(title)}" />`,

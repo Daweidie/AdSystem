@@ -6,7 +6,7 @@ import QRCode from 'qrcode';
 
 const API = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api').replace(/\/$/, '');
 const VOD_SDK = 'https://cdn-go.cn/cdn/vod-js-sdk-v6/latest/vod-js-sdk-v6.js';
-const MAX_VIDEO_UPLOAD_SIZE_BYTES = 800 * 1024 * 1024;
+const MAX_VIDEO_UPLOAD_SIZE_BYTES = 600 * 1024 * 1024;
 // 暂时隐藏有问题的纯文字卡片实验入口，保留后端和历史链接兼容能力。
 const TEXT_DESCRIPTION_EXPERIMENT_ENABLED = false;
 const router = useRouter();
@@ -36,6 +36,9 @@ const suolinkSharedDomains = ['iq1k.cn', 'm6z.cn', 'i6q.cn'];
 const suolinkForm = reactive({ enabled: false, apiKey: '', apiKeyConfigured: false, apiKeyMasked: '', domain: '' });
 const domainEditVisible = ref(false);
 const domainForm = reactive({ id: '', domain: '', remark: '', isEnabled: true, isPrimary: false });
+const certificateDialogVisible = ref(false);
+const certificateUploading = ref(false);
+const certificateForm = reactive({ domain: null, certificate: null, privateKey: null, status: null });
 const expandedMaterials = ref(new Set());
 const selectedRows = ref([]);
 
@@ -452,6 +455,40 @@ async function removeDomain(item) {
   } catch (error) { if (error !== 'cancel') ElMessage.error(error.message || '操作已取消'); }
 }
 
+async function openCertificateDialog(item) {
+  certificateForm.domain = item;
+  certificateForm.certificate = null;
+  certificateForm.privateKey = null;
+  certificateForm.status = null;
+  certificateDialogVisible.value = true;
+  try {
+    certificateForm.status = await request(`/domain/${item.id}/certificate`);
+    if (!certificateForm.status?.configured && certificateForm.status?.legacyConfigDetected) {
+      ElMessage.warning('检测到旧证书文件，但 Nginx 未加载该配置；请重新上传证书完成迁移');
+    }
+  } catch (error) { ElMessage.error(error.message || '无法读取证书状态'); }
+}
+
+function pickCertificateFile(event, field) {
+  certificateForm[field] = event.target.files?.[0] || null;
+}
+
+async function uploadDomainCertificate() {
+  if (!certificateForm.certificate || !certificateForm.privateKey) {
+    ElMessage.warning('请同时选择 fullchain.pem 和 privkey.pem'); return;
+  }
+  certificateUploading.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('certificate', certificateForm.certificate);
+    formData.append('privateKey', certificateForm.privateKey);
+    const result = await request(`/domain/${certificateForm.domain.id}/certificate`, { method: 'POST', body: formData });
+    certificateForm.status = result;
+    ElMessage.success('证书已验证并启用，Nginx 已平滑重载');
+  } catch (error) { ElMessage.error(error.message || '证书上传失败'); }
+  finally { certificateUploading.value = false; }
+}
+
 function dashboardCards() {
   const d = dashboardData.value;
   if (!d) return [];
@@ -489,24 +526,15 @@ async function generateLink(material, platform = 'self', selectedMode) {
       body: JSON.stringify({
         videoId: material.id,
         wechatCardMode,
-        ...(isSuolink ? { platform: 'suolink', allowFallback: false } : {}),
+        // 万能短链接优先使用 Suolink；供应商域名未备案或未生效时，
+        // 自动降级为当前已验证的自建 /s 短链，避免管理员只能收到 502。
+        ...(isSuolink ? { platform: 'auto', allowFallback: true } : {}),
       }),
     });
     const copied = await copyText(result.shortUrl || result.short_url || '');
     const linkLabel = wechatCardMode === 'text_description'
       ? '全新纯文字实验短链'
       : isSuolink ? 'Suolink 链接' : '自建 /s/ 链接';
-    const rejectedDomains = Array.isArray(result.providerRejectedDomains)
-      ? result.providerRejectedDomains.filter(Boolean)
-      : [];
-    if (isSuolink && rejectedDomains.length) {
-      ElMessage.warning({
-        message: `${linkLabel}已生成${copied ? '并复制' : ''}；${rejectedDomains.join('、')} 被 Suolink 拒绝，请检查这些域名是否已绑定到当前 API Key`,
-        duration: 8000,
-      });
-      await loadMaterials();
-      return;
-    }
     ElMessage[copied ? 'success' : 'warning'](
       copied
         ? `${linkLabel}已生成并复制`
@@ -662,7 +690,7 @@ async function openWechatShare(material, link) {
       coverUrl: link.wechat_card_mode === 'text_description'
         ? ''
         : resolveAssetUrl(link.card_cover_url || material.cover_url)
-          || `${window.location.origin}/wechat-share-default.png`,
+          || resolveAssetUrl('/wechat-share-default.png'),
       link: shareUrl,
       qrDataUrl,
       wechatCardMode: link.wechat_card_mode || 'standard',
@@ -693,10 +721,30 @@ function resolveAssetUrl(value) {
   if (!raw || /^(https?:|blob:|data:)/i.test(raw)) return raw;
   try {
     const apiOrigin = new URL(API, window.location.origin).origin;
-    return new URL(raw, raw.startsWith('/api/') ? apiOrigin : window.location.origin).toString();
+    // Cover files and the fallback image are served by Express/Nginx, not by
+    // the Vite dev server. Resolve root-relative backend assets against the
+    // API origin; in production this remains the same-origin URL.
+    return new URL(raw, apiOrigin).toString();
   } catch {
     return raw;
   }
+}
+
+function persistedCoverUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (/^\/(?:card-covers|api\/media\/share-cards)\//i.test(url.pathname)) {
+      // Keep managed covers as a path. This works in local HTTP development
+      // as well as production HTTPS and avoids sending the dev API origin to
+      // the HTTPS-only card-cover validator.
+      return url.pathname;
+    }
+  } catch {
+    // Leave validation of non-managed values to the backend.
+  }
+  return raw;
 }
 
 function clearShareCardCoverFile() {
@@ -727,7 +775,7 @@ async function openShareCard(material, link) {
     description: material.description || '点击查看视频素材',
     coverUrl: link.wechat_card_mode === 'text_description'
       ? ''
-      : resolveAssetUrl(material.cover_url) || `${window.location.origin}/wechat-share-default.png`,
+      : resolveAssetUrl(material.cover_url) || resolveAssetUrl('/wechat-share-default.png'),
     coverFile: null,
     wechatCardMode: link.wechat_card_mode || 'standard',
   });
@@ -824,7 +872,7 @@ async function saveShareCardV2() {
         title: shareCardForm.title,
         description: shareCardForm.description,
         ...(shareCardForm.wechatCardMode === 'standard'
-          ? { coverUrl: shareCardForm.coverUrl }
+          ? { coverUrl: persistedCoverUrl(shareCardForm.coverUrl) }
           : {}),
       }),
     });
@@ -938,7 +986,7 @@ function pickFile(event, type) {
   if (type === 'video') {
     if (file && file.size > MAX_VIDEO_UPLOAD_SIZE_BYTES) {
       uploadForm.videoFile = null;
-      ElMessage.error('视频文件不能超过 800MB，请压缩或重新选择');
+      ElMessage.error('视频文件不能超过 600MB，请压缩或重新选择');
       return;
     }
     uploadForm.videoFile = file;
@@ -963,7 +1011,7 @@ async function submitUpload() {
   }
   if (uploadForm.videoFile.size > MAX_VIDEO_UPLOAD_SIZE_BYTES) {
     uploadForm.videoFile = null;
-    ElMessage.error('视频文件不能超过 800MB，请压缩或重新选择');
+    ElMessage.error('视频文件不能超过 600MB，请压缩或重新选择');
     return;
   }
   uploading.value = true; uploadProgress.value = 0;
@@ -1245,9 +1293,9 @@ onMounted(async () => {
             <div class="form-section-title"><span>02</span><div><h3>素材信息</h3><p>标题与简介将用于后台识别和微信卡片展示。</p></div></div>
             <div class="form-grid"><label><span>素材名称</span><el-input v-model="uploadForm.title" placeholder="请输入素材标题" /></label><label><span>素材简介</span><el-input v-model="uploadForm.description" type="textarea" :rows="3" placeholder="请输入广告内容简介" /></label></div>
             <div class="form-section-title"><span>03</span><div><h3>上传文件</h3><p>视频将安全直传至云端存储。</p></div></div>
-  <div class="upload-zones"><label class="upload-zone"><input type="file" accept="video/mp4,video/*" @change="pickFile($event, 'video')" /><strong>▶</strong><b>{{ uploadForm.videoFile?.name || '选择视频文件' }}</b><span>建议 MP4，文件不超过 800MB</span></label><label class="upload-zone cover-zone"><input type="file" accept="image/jpeg,image/png,image/webp" @change="pickFile($event, 'cover')" /><strong>＋</strong><b>{{ uploadForm.coverFile?.name || '上传封面图片' }}</b><span>支持 JPG、PNG、WebP，文件不超过 5MB</span></label></div>
+  <div class="upload-zones"><label class="upload-zone"><input type="file" accept="video/mp4,video/*" @change="pickFile($event, 'video')" /><strong>▶</strong><b>{{ uploadForm.videoFile?.name || '选择视频文件' }}</b><span>建议 MP4，文件不超过 600MB</span></label><label class="upload-zone cover-zone"><input type="file" accept="image/jpeg,image/png,image/webp" @change="pickFile($event, 'cover')" /><strong>＋</strong><b>{{ uploadForm.coverFile?.name || '上传封面图片' }}</b><span>支持 JPG、PNG、WebP，文件不超过 5MB</span></label></div>
             <el-progress v-if="uploading || uploadProgress" :percentage="uploadProgress" />
-            <div class="form-footer"><button type="button" :disabled="uploading" @click="submitUpload">{{ uploading ? '正在上传…' : '保存素材' }}</button><p>素材默认保留 3 天，到期后视频自动删除，访问统计数据继续保留。</p></div>
+            <div class="form-footer"><button type="button" :disabled="uploading" @click="submitUpload">{{ uploading ? '正在上传…' : '保存素材' }}</button><p>素材默认保留 48 小时，到期后视频自动删除，访问统计数据继续保留。</p></div>
           </div>
         </template>
 
@@ -1333,7 +1381,7 @@ onMounted(async () => {
                   <td><code>{{ item.domain }}</code></td><td><span :class="item.platform === 'suolink' ? 'platform-tag suolink' : 'platform-tag'">{{ item.platform === 'suolink' ? 'Suolink' : '自建 self' }}</span></td><td>{{ item.remark || '-' }}</td><td>{{ item.link_count || 0 }}</td>
                   <td><span class="table-status" :class="{ disabled: !item.is_enabled }">{{ item.is_enabled ? '已启用' : '已停用' }}</span></td>
                   <td><span v-if="item.is_primary" class="primary-domain-tag">主域名</span><span v-else>池内域名</span></td>
-                  <td class="table-actions"><button type="button" @click="openEditDomain(item)">编辑</button><button v-if="!item.is_primary && item.is_enabled" type="button" @click="setPrimaryDomain(item)">设为主域名</button><button v-if="!item.is_primary" type="button" @click="toggleDomain(item)">{{ item.is_enabled ? '停用' : '启用' }}</button><button v-if="!item.is_primary" type="button" class="danger" @click="removeDomain(item)">删除</button></td>
+                  <td class="table-actions"><button v-if="item.platform === 'self'" type="button" @click="openCertificateDialog(item)">SSL 证书</button><button type="button" @click="openEditDomain(item)">编辑</button><button v-if="!item.is_primary && item.is_enabled" type="button" @click="setPrimaryDomain(item)">设为主域名</button><button v-if="!item.is_primary" type="button" @click="toggleDomain(item)">{{ item.is_enabled ? '停用' : '启用' }}</button><button v-if="!item.is_primary" type="button" class="danger" @click="removeDomain(item)">删除</button></td>
                 </tr></tbody>
               </table>
               <el-empty v-if="!domains.length" description="域名池为空，请先添加域名" />
@@ -1491,6 +1539,17 @@ onMounted(async () => {
       </div>
       <p class="domain-dialog-tip">仅填写根地址，不要包含 /play、查询参数或具体视频路径。</p>
       <template #footer><el-button @click="domainEditVisible = false">取消</el-button><el-button type="primary" @click="saveDomain">保存域名</el-button></template>
+    </el-dialog>
+
+    <el-dialog v-model="certificateDialogVisible" title="SSL 证书管理" width="620px" destroy-on-close>
+      <div v-if="certificateForm.domain" class="dialog-form-grid domain-dialog-form">
+        <label><span>域名</span><el-input :model-value="certificateForm.domain.domain" disabled /></label>
+        <label><span>证书状态</span><el-input :model-value="certificateForm.status?.configured ? `已配置，${certificateForm.status.expiresAt || '有效期未知'}` : certificateForm.status?.legacyConfigDetected ? '旧配置未被 Nginx 加载，请重新上传' : '尚未配置'" disabled /></label>
+        <label><span>证书链 fullchain.pem</span><input type="file" accept=".pem,.crt,.cer" @change="pickCertificateFile($event, 'certificate')" /><small>{{ certificateForm.certificate?.name || '请选择证书链文件' }}</small></label>
+        <label><span>私钥 privkey.pem</span><input type="file" accept=".pem,.key" @change="pickCertificateFile($event, 'privateKey')" /><small>{{ certificateForm.privateKey?.name || '请选择私钥文件' }}</small></label>
+      </div>
+      <p class="domain-dialog-tip">系统会验证证书域名、有效期及私钥匹配关系；私钥仅以服务器私有权限保存，不能下载或回显。请先将域名 A 记录解析到本服务器。</p>
+      <template #footer><el-button @click="certificateDialogVisible = false">取消</el-button><el-button type="primary" :loading="certificateUploading" @click="uploadDomainCertificate">验证并启用证书</el-button></template>
     </el-dialog>
   </div>
 </template>

@@ -8,9 +8,14 @@ const {
 const { getCustomerBaseUrl } = require('../services/runtimeConfigService');
 const cloudflareShortLinkService = require('../services/cloudflareShortLinkService');
 const logger = require('../utils/logger');
-const { isPrivateHostname, toPublicHttpsUrl } = require('../services/cardPageService');
+const {
+  isPrivateHostname,
+  toPublicHttpsUrl,
+  configuredCardCoverBaseUrl,
+} = require('../services/cardPageService');
 const {
   processCardCover,
+  canonicalCardCoverPath,
   removeCardCover,
 } = require('../services/cardCoverService');
 const visitQuotaService = require('../services/visitQuotaService');
@@ -739,6 +744,7 @@ async function synchronizeShortLinkCard(link, req, values = {}) {
     ogImage: toPublicHttpsUrl(
       values.coverUrl ?? link.card_cover_url ?? link.video_cover_url,
       req,
+      configuredCardCoverBaseUrl(),
     ),
     ogUrl: link.short_url,
     expiresAt: link.expires_at,
@@ -781,7 +787,7 @@ async function synchronizeVideoCoverToShortLinks(videoId, previousCoverUrl, cove
           targetUrl: link.long_url,
           ogTitle: link.card_title || link.video_title || '视频播放',
           ogDescription: link.card_description || link.video_description || '点击查看视频素材',
-          ogImage: toPublicHttpsUrl(effectiveCover, req),
+          ogImage: toPublicHttpsUrl(effectiveCover, req, configuredCardCoverBaseUrl()),
           ogUrl: link.short_url,
           expiresAt: link.expires_at,
         });
@@ -805,7 +811,8 @@ function isCardTarget(longUrl, cardToken, platform) {
 function normalizeCardCoverValue(value) {
   const normalized = String(value || '').trim();
   if (!normalized) return null;
-  if (/^\/api\/media\/share-cards\/(?:[0-9a-f-]{36}|[0-9a-f]{64})\.(jpg|png|webp)$/i.test(normalized)) return normalized;
+  const managedPath = canonicalCardCoverPath(normalized);
+  if (managedPath) return managedPath;
   let url;
   try { url = new URL(normalized); } catch { throw httpError(400, '卡片封面地址必须是 HTTPS 图片地址'); }
   if (

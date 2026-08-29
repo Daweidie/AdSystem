@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const fs = require('fs');
+const path = require('path');
 
 function normalizePublicBaseUrl(value, fieldName = 'PUBLIC_CARD_BASE_URL') {
   const raw = String(value || '').trim();
@@ -43,6 +45,31 @@ function configuredCardBaseUrl() {
   return String(
     process.env.PUBLIC_CARD_BASE_URL || process.env.CARD_PAGE_BASE_URL || '',
   ).trim();
+}
+
+function syncProcessPublicBaseUrls(domain) {
+  const normalized = normalizePublicBaseUrl(domain);
+  if (!normalized) throw new Error('主域名必须是有效的 HTTPS 地址');
+  process.env.PLAY_PAGE_BASE_URL = normalized;
+  process.env.PUBLIC_CARD_BASE_URL = normalized;
+  process.env.PUBLIC_SHORTLINK_BASE_URL = normalized;
+  return normalized;
+}
+
+function persistPublicBaseUrls(domain) {
+  const normalized = syncProcessPublicBaseUrls(domain);
+  if (process.env.RUNTIME_DOMAIN_SYNC_ENABLED !== '1') return normalized;
+  const envFile = process.env.RUNTIME_ENV_FILE || path.resolve(__dirname, '../../.env');
+  let content = fs.readFileSync(envFile, 'utf8');
+  for (const key of ['PLAY_PAGE_BASE_URL', 'PUBLIC_CARD_BASE_URL', 'PUBLIC_SHORTLINK_BASE_URL']) {
+    const pattern = new RegExp(`^${key}=.*$`, 'm');
+    content = pattern.test(content) ? content.replace(pattern, `${key}=${normalized}`) : `${content.replace(/\n?$/, '\n')}${key}=${normalized}\n`;
+  }
+  const temporary = `${envFile}.domain-sync-${process.pid}`;
+  fs.writeFileSync(temporary, content, { mode: 0o600 });
+  fs.renameSync(temporary, envFile);
+  fs.chmodSync(envFile, 0o600);
+  return normalized;
 }
 
 async function getEnabledSelfDomains() {
@@ -187,5 +214,6 @@ module.exports = {
   getPlayPageBaseUrl,
   getPublicCardBaseUrl,
   getPublicCardDomainDiagnostics,
+  persistPublicBaseUrls,
   normalizePublicBaseUrl,
 };

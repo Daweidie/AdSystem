@@ -15,6 +15,8 @@ const playbackRouteContext = {
 };
 const pageState = ref('loading');
 const errorMessage = ref('');
+const loadingProgress = ref(8);
+const loadingLabel = ref('正在连接视频服务…');
 const videoTitle = ref('视频播放');
 const videoInfo = ref(null);
 const playerElementKey = ref(0);
@@ -35,7 +37,29 @@ let lastPlayedSeconds = 0;
 let furthestPlayedSeconds = 0;
 let restoringSeek = false;
 
+const NETWORK_RETRY_LIMIT = 3;
+const NETWORK_RETRY_DELAYS = [300, 900, 1800];
+
 const SEEK_TOLERANCE_SECONDS = 1.5;
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function retryNetworkOperation(operation) {
+  let lastError;
+  for (let attempt = 0; attempt < NETWORK_RETRY_LIMIT; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt < NETWORK_RETRY_LIMIT - 1) {
+        await wait(NETWORK_RETRY_DELAYS[attempt]);
+      }
+    }
+  }
+  throw lastError || new Error('网络请求失败');
+}
 
 function getApiBaseUrl() {
   const configured = String(import.meta.env.VITE_API_BASE_URL || '').trim();
@@ -425,7 +449,11 @@ function resolveAssetUrl(value) {
   try {
     const apiBaseUrl = getApiBaseUrl();
     const apiOrigin = new URL(apiBaseUrl, window.location.origin).origin;
-    return new URL(raw, raw.startsWith('/api/') ? apiOrigin : window.location.origin).toString();
+    // The backend serves card covers and the fallback poster.  During local
+    // development the page is on :5173 while Express is on :3001, so using
+    // window.location.origin would resolve the image to the Vite SPA and
+    // return HTML instead of image bytes.
+    return new URL(raw, apiOrigin).toString();
   } catch {
     return raw;
   }
@@ -509,6 +537,8 @@ async function initializePlayer() {
   const requestedFileId = getQueryFileId();
 
   pageState.value = 'loading';
+  loadingProgress.value = 8;
+  loadingLabel.value = '正在连接视频服务…';
   errorMessage.value = '';
   videoTitle.value = '视频播放';
   videoInfo.value = null;
@@ -533,7 +563,9 @@ async function initializePlayer() {
   let playback;
 
   try {
-    playback = await fetchPlaybackInfo(requestedFileId);
+    playback = await retryNetworkOperation(() => fetchPlaybackInfo(requestedFileId));
+    loadingProgress.value = 42;
+    loadingLabel.value = '视频信息已获取，正在加载播放器…';
   } catch (error) {
     if (currentSequence !== loadSequence) {
       return;
@@ -560,7 +592,9 @@ async function initializePlayer() {
   let TCPlayer;
 
   try {
-    TCPlayer = await loadTcPlayer();
+    TCPlayer = await retryNetworkOperation(() => loadTcPlayer());
+    loadingProgress.value = 72;
+    loadingLabel.value = '播放器组件已加载，正在初始化…';
   } catch (error) {
     if (currentSequence !== loadSequence) {
       return;
@@ -632,6 +666,8 @@ async function initializePlayer() {
     });
     document.documentElement.dataset.demo18PlayerInitialized = 'true';
     restoreServerSharePath();
+    loadingProgress.value = 100;
+    loadingLabel.value = '加载完成，准备播放';
   } catch (error) {
     if (currentSequence !== loadSequence) {
       return;
@@ -681,7 +717,11 @@ onBeforeUnmount(() => {
     <section ref="playerShell" class="player-shell" aria-live="polite">
       <div v-if="pageState === 'loading'" class="status-panel">
         <span class="spinner" aria-hidden="true"></span>
-        <p>正在加载视频，请稍候…</p>
+        <p>{{ loadingLabel }}</p>
+        <div class="loading-progress" role="progressbar" :aria-valuenow="loadingProgress" aria-valuemin="0" aria-valuemax="100">
+          <span :style="{ width: `${loadingProgress}%` }"></span>
+        </div>
+        <small>{{ loadingProgress }}%</small>
       </div>
 
       <div v-else-if="pageState === 'empty'" class="status-panel empty-panel">
@@ -857,6 +897,27 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
+}
+
+.loading-progress {
+  width: min(260px, 80%);
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 18%);
+}
+
+.loading-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #5eead4;
+  transition: width 0.35s ease;
+}
+
+.status-panel small {
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
 }
 
 .status-panel h2 {

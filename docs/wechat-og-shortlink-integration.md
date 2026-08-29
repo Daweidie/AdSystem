@@ -8,6 +8,18 @@
 
 Open Graph 是兼容性输入，不是微信的强制展示 API。微信最终是否展开、标题/简介如何排版以及缓存何时刷新，均由微信客户端和微信缓存策略决定。
 
+### 封面可达性（国内企微抓取）
+
+卡片 HTML 可以继续部署在香港/海外，但 `og:image` 不应指向该跨境源站。请将封面同步到
+已备案的腾讯云 COS/CDN，并在后端配置 `PUBLIC_CARD_COVER_BASE_URL` 为该 CDN 的 HTTPS
+根域名；系统会把 `/card-covers/*` 和默认图改写为该 Origin。CDN 必须允许匿名 `GET/HEAD`，
+返回 `200`、真实图片 `Content-Type`（JPEG/PNG）和不超过 1MB 的响应，不要加登录、Referer
+校验或防盗链。未配置专用 Origin 时才回退到 `PUBLIC_CARD_BASE_URL`。
+
+默认图是 PNG，动态封面为规范化 JPEG；服务端不会再把 PNG 错报为 `image/jpeg`，未知扩展名
+则省略 `og:image:type`，以响应头为准。修改封面后请使用新短码或等待企微预览缓存（通常约
+24 小时）失效。
+
 ## 架构
 
 ```text
